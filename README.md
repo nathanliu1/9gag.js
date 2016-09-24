@@ -1,4 +1,4 @@
-# 9GAG.js - Unofficial API for 9gag.com
+# 9gag.js - Unofficial API for 9gag.com
 ##Installation Guide
 ```shell
 cd 9gag.js
