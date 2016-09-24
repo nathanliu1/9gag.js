@@ -1,0 +1,25 @@
+{
+  "name": "9gag.js",
+  "version": "1.0.0",
+  "description": "9GAG API",
+  "main": "src/9gag.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chewong/9gag.js.git"
+  },
+  "keywords": [
+    "9gag"
+  ],
+  "author": "Ernest Wong",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chewong/9gag.js/issues"
+  },
+  "homepage": "https://github.com/chewong/9gag.js#readme",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
+}
