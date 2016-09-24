@@ -1,10 +1,11 @@
 # 9gag.js - Unofficial API for 9gag.com
 ##Installation Guide
+Pre-requisites: Node.js
 ```shell
-cd 9gag.js
-npm install
-cd src
-node 9gag.js
+$ cd 9gag.js
+$ npm install
+$ cd src
+$ node 9gag.js
 ```
 To test if the server is working, in your browser, type: 
 ```
