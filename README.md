@@ -10,6 +10,10 @@ $ node 9gag.js
 
 ##Documentation
 - [GET /gag/:gagId](#get-gaggagid)
+- [OBJECT Images](#images)
+- [OBJECT Media](#media)
+- [OBJECT Votes](#votes)
+- [OBJECT Comments](#comments)
 
 ### GET /gag/:gagId
 Get data for a specific gag.
@@ -26,14 +30,14 @@ status     | Number    |HTTP status code
 message     | String    |  Message of the status code
 id     | String    | ID of the gag
 caption     | String    | Caption of the gag
-images     | Image object    | The images of the gag
-media     | Media object    | ID of the gag | Only available if the gag is GIF
+images     | [Image](#images)     | The images of the gag
+media     | [Media](#media)     | ID of the gag | Only available if the gag is GIF
 link     | String    | 9gag.com link of the gag
-votes     | Vote object    |  Contains the number of votes for the gag
-comments     | Comments object    |  Contains the number of comments for the gag
+votes     | [Votes](#votes)     |  Contains the number of votes for the gag
+comments     | [Comments](#comments)     |  Contains the number of comments for the gag
 
 ####Example
-REST Call:
+REST Call
 ```
 localhost:3000/gag/aopAw22
 ```
@@ -64,4 +68,42 @@ Response
 }
 ```
 
+###Images
+An image object contains a gag image with various sizes.
+
+####Properties
+Properties | Type     | Description
+--------- | --------- | ------- 
+small     | String    | The picture of the gag, in small size
+cover     | String    | The picture of the gag, in cover size
+normal     | String    | The picture of the gag, in normal size
+large     | String    | The picture of the gag, in large size
+
+###Media
+An media object contains the animation of a gag
+
+####Properties
+Properties | Type     | Description
+--------- | --------- | ------- 
+mp4     | string    | The animation of the gag, in .mp4
+webm     | string    | The animation of the gag, in .webm
+
+###Votes
+An vote object contains the number of votes for a specific gag
+
+####Properties
+Properties | Type     | Description
+--------- | --------- | ------- 
+count     | Number    | Number of votes
+
+###Comments
+An comment object contains the number of comments for a specific gag
+
+####Properties
+Properties | Type     | Description
+--------- | --------- | ------- 
+count     | Number    | Number of comments
+
+###Contribution
+https://github.com/k3min/infinigag
 
