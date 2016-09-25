@@ -1,14 +1,22 @@
+'use strict';
 var express = require('express');
 var request = require('request');
 var cheerio = require('cheerio');
+var _ = require('lodash');
 
 var app = express();
 
-// Constants
+// HTTP status codes, messages and miscellaneous constants
 const SUCCESS = 200;
+const SUCCESS_MESSAGE = 'OK';
+const BAD_REQUEST = 400;
+const BAD_REQUEST_MESSAGE = 'UNKNOWN REQUEST KEYWORD';
 const NOT_FOUND = 404;
+const NOT_FOUND_MESSAGE = 'RESOURSE NOT FOUND';
+const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
+const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh']
 
-// Core API Object
+// Core 9GAG API Object
 var _9gag = {
     getPost: function(gagId, callback) {
         // Base URL for a gag
@@ -22,7 +30,7 @@ var _9gag = {
                 // Construct a response
                 var response = {};
                 response['status'] = SUCCESS;
-                response['message'] = 'OK';
+                response['message'] = SUCCESS_MESSAGE;
                 response['id'] = gagId;
                 response['caption'] = $('.badge-item-title').html();
                 response['images'] = _util.generateImagesUrl(gagId);
@@ -46,48 +54,72 @@ var _9gag = {
     }
 };
 
-// Helper Object
+// Util Object
 var _util = {
+    baseContentUrl: 'http://img-9gag-fun.9cache.com/photo/',
     generateImagesUrl: function(gagId) {
-        const BASE_URL = 'http://img-9gag-fun.9cache.com/photo/';
         var imagesUrl = {};
-        imagesUrl['small'] = BASE_URL + gagId + '_220x145.jpg';
-        imagesUrl['cover'] = BASE_URL + gagId + '_460c.jpg';
-        imagesUrl['normal'] = BASE_URL + gagId + '_460s.jpg';
-        imagesUrl['large'] = BASE_URL + gagId + '_700b.jpg';
+        imagesUrl['small'] = this.baseContentUrl + gagId + '_220x145.jpg';
+        imagesUrl['cover'] = this.baseContentUrl + gagId + '_460c.jpg';
+        imagesUrl['normal'] = this.baseContentUrl + gagId + '_460s.jpg';
+        imagesUrl['large'] = this.baseContentUrl + gagId + '_700b.jpg';
         return imagesUrl;
     },
     generateMediaUrl: function(gagId) {
-        const BASE_URL = 'http://img-9gag-fun.9cache.com/photo/';
         var mediaUrl = {};
-        mediaUrl['mp4'] = BASE_URL + gagId + '_460sv.mp4';
-        mediaUrl['webm'] = BASE_URL + gagId + '_460svwm.webm';
+        mediaUrl['mp4'] = this.baseContentUrl + gagId + '_460sv.mp4';
+        mediaUrl['webm'] = this.baseContentUrl + gagId + '_460svwm.webm';
         return mediaUrl;
+    },
+    isSectionValid: function(req) {
+        // 1. Check if the requested section is a valid section
+        // 2. Check if the requested section is in SPECIAL_SECTION_LIST ['hot', 'trending', 'fresh']. 
+        //    if it is, make sure the user did not provide a subSection
+        // 3. Make sure subSection is only 'hot' or 'fresh'. If the user did not provide a subSection, it will be 'hot' by default
+        if (!_.includes(SECTION_LIST, req.params.section)) {
+            return false;
+        } else if (_.includes(SPECIAL_SECTION_LIST, req.params.section) && req.params.subSection != undefined) {
+            return false;
+        } else if (!_.includes(SPECIAL_SECTION_LIST, req.params.section)) {
+            if (req.params.subSection != undefined && req.params.subSection != 'hot' && req.params.subSection != 'fresh') {
+                return false;
+            }
+        }
+        // Checking if there is extra parameters, since we do not want extra parameters
+        return !req.params['0'];
     }
 };
 
-// Beginning of API
+// API STARTS HERE
+
+// GET /gag/:gagId
 app.get('/gag/:gagId', function(req, res) {
     // Gag id is invalid if the length is not 7
     if (req.params.gagId.length != 7) {
-        res.json({'status': NOT_FOUND, message: 'GAG NOT FOUND: ID LENGTH IS NOT 7'});
+        res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
         return;
     }
-    
     _9gag.getPost(req.params.gagId, function(response) {
         // Handle unknown gag
         if (!response) {
-            res.json({'status': NOT_FOUND, message: 'GAG NOT FOUND: UNKNOWN ID'});
+            res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
             return;
         }
-
-        // returning a json
+        // returning a json response
         res.json(response);
     });
 });
 
+app.get('/:section/:subSection*?', function(req, res) {
+    if (_util.isSectionValid(req)) {
+        res.json({'status': SUCCESS, 'message': req.params.section + ' ' + req.params.subSection});
+    } else {
+        res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+    }
+});
+
 app.get('*', function(req, res) {
-    res.json({'status': NOT_FOUND, message: 'API NOT FOUND'});
+    res.json({'status': BAD_REQUEST, 'message': BAD_REQUEST_MESSAGE});
 });
 
 app.listen(3000);
