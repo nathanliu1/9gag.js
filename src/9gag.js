@@ -15,24 +15,56 @@ var _9gag = {
         var site = 'http://9gag.com/gag/' + gagId;
         
         // Get data for the gag site
-        request(site, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                let $ = cheerio.load(body);
+        request(site, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                var $ = cheerio.load(body);
 
-                var gagData = {};
-                gagData['id'] = gagId;
-                gagData['image'] = 'http://img-9gag-fun.9cache.com/photo/' + gagId + '_700b.jpg';
-                gagData['title'] = $('.badge-item-title').html();
+                // Construct a response
+                var response = {};
+                response['status'] = SUCCESS;
+                response['message'] = 'OK';
+                response['id'] = gagId;
+                response['caption'] = $('.badge-item-title').html();
+                response['images'] = _util.generateImagesUrl(gagId);
+                // Check if the gag is a gif
+                if ($('.badge-animated-cover').length > 0) {
+                    response['media'] = _util.generateMediaUrl(gagId);
+                }
+                response['link'] = 'http://9gag.com/gag/' + gagId;
+                response['votes'] = {};
+                response['votes']['count'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
+                response['comments'] = {};
+                response['comments']['count'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
 
                 // Callback
-                callback(gagData);
+                callback(response);
             } else {
                 // If we fail to request from gag site
                 callback(undefined);
             }
         });
     }
-}
+};
+
+// Helper Object
+var _util = {
+    generateImagesUrl: function(gagId) {
+        const BASE_URL = 'http://img-9gag-fun.9cache.com/photo/';
+        var imagesUrl = {};
+        imagesUrl['small'] = BASE_URL + gagId + '_220x145.jpg';
+        imagesUrl['cover'] = BASE_URL + gagId + '_460c.jpg';
+        imagesUrl['normal'] = BASE_URL + gagId + '_460s.jpg';
+        imagesUrl['large'] = BASE_URL + gagId + '_700b.jpg';
+        return imagesUrl;
+    },
+    generateMediaUrl: function(gagId) {
+        const BASE_URL = 'http://img-9gag-fun.9cache.com/photo/';
+        var mediaUrl = {};
+        mediaUrl['mp4'] = BASE_URL + gagId + '_460sv.mp4';
+        mediaUrl['webm'] = BASE_URL + gagId + '_460svwm.webm';
+        return mediaUrl;
+    }
+};
 
 // Beginning of API
 app.get('/gag/:gagId', function(req, res) {
@@ -41,31 +73,21 @@ app.get('/gag/:gagId', function(req, res) {
         res.json({'status': NOT_FOUND, message: 'GAG NOT FOUND: ID LENGTH IS NOT 7'});
         return;
     }
-
-    _9gag.getPost(req.params.gagId, function(postData) {
+    
+    _9gag.getPost(req.params.gagId, function(response) {
         // Handle unknown gag
-        if (!postData) {
+        if (!response) {
             res.json({'status': NOT_FOUND, message: 'GAG NOT FOUND: UNKNOWN ID'});
             return;
         }
 
-        // Successful
-        var response = {};
-        var data = [];
-
-        response['status'] = SUCCESS;
-        response['message'] = 'OK'
-
-        data.push(postData);
-
-        response['data'] = data;
-
+        // returning a json
         res.json(response);
     });
-})
+});
 
 app.get('*', function(req, res) {
     res.json({'status': NOT_FOUND, message: 'API NOT FOUND'});
 });
 
-app.listen(3000)
+app.listen(3000);
