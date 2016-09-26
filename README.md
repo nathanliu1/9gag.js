@@ -25,22 +25,16 @@ Object Model |
 Get data for a specific gag.
 
 ####Parameters
-Name      | Required? | Type      | Default | Description
+Key      | Required? | Value Type      | Default | Description
 --------- | ------- |--------- | ------- | -----------
 gagId     | ✓ |String    | N/A     | ID of the gag
 
 ####Response
-Name      | Type      |  Description | Note
+Key      | Value Type      |  Description | Note
 --------- | --------- | ------- | -----------
 status     | Number    |HTTP status code
 message     | String    |  Message of the status code
-id     | String    | ID of the gag
-caption     | String    | Caption of the gag
-images     | [Image](#images)     | The images of the gag
-media     | [Media](#media)     | ID of the gag | Only available if the gag is GIF
-link     | String    | 9gag.com link of the gag
-votes     | [Votes](#votes)     |  Contains the number of votes for the gag
-comments     | [Comments](#comments)     |  Contains the number of comments for the gag
+gag | [Gag](#gag) | A gag 
 
 ####Example
 REST Call
@@ -52,24 +46,26 @@ Response
 {  
     "status":200,
     "message":"OK",
-    "id":"aopAw22",
-    "caption":"My whole life is a lie ...",
-    "images":{  
-        "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
-        "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
-        "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
-        "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
-    },
-    "media":{  
-        "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
-        "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
-    },
-    "link":"http://9gag.com/gag/aopAw22",
-    "votes":{  
-        "count":12656
-    },
-    "comments":{  
-        "count":628
+    "gag":{
+        "id":"aopAw22",
+        "caption":"My whole life is a lie ...",
+        "images":{  
+            "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
+            "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
+            "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
+            "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
+        },
+        "media":{  
+            "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
+            "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
+        },
+        "link":"http://9gag.com/gag/aopAw22",
+        "votes":{  
+            "count":12656
+        },
+        "comments":{  
+            "count":628
+        }
     }
 }
 ```
@@ -84,18 +80,18 @@ Currently availabe sub-sections:
 > 'hot', 'fresh'
 
 ####Parameters
-Name      | Required? |Type      | Default | Description
+Key      | Required? |Value Type      | Default | Description
 --------- | ------ |--------- | ------- | -----------
 section    |✓ | String    | N/A     | The section of the gag
 subSection  |  | String    | hot     | The sub-section of the gag
 limit       | | Number     | 1 | The number of gags one would like to get
 
 ####Response
-Name      | Type      |  Description | Note
+Key      | Value Type      |  Description | Note
 --------- | --------- | ------- | -----------
 status     | Number    | HTTP status code
 message     | String    |  Message of the status code
-data     | Array | An array of [gag data](#get-gaggagid)
+data     | Array | An array of [gag](#gag)
 
 ####Example
 REST Call
@@ -151,11 +147,22 @@ Response
 }
 ```
 
+###Gag
+Key | Value Type     | Description
+------------|-------|-------
+id     | String    | ID of the gag
+caption     | String    | Caption of the gag
+images     | [Image](#images)     | The images of the gag
+media     | [Media](#media)     | ID of the gag (Only available if the gag is a GIF)
+link     | String    | 9gag.com link of the gag
+votes     | [Votes](#votes)     |  Contains the number of votes for the gag
+comments     | [Comments](#comments)     |  Contains the number of comments for the gag
+
 ###Images
 An image object contains a gag image with various sizes.
 
 ####Properties
-Properties | Type     | Description
+Key | Value Type     | Description
 --------- | --------- | ------- 
 small     | String    | The picture of the gag, in small size
 cover     | String    | The picture of the gag, in cover size
@@ -166,7 +173,7 @@ large     | String    | The picture of the gag, in large size
 An media object contains the animation of a gag
 
 ####Properties
-Properties | Type     | Description
+Key | Value Type     | Description
 --------- | --------- | ------- 
 mp4     | string    | The animation of the gag, in .mp4
 webm     | string    | The animation of the gag, in .webm
@@ -175,7 +182,7 @@ webm     | string    | The animation of the gag, in .webm
 An vote object contains the number of votes for a specific gag
 
 ####Properties
-Properties | Type     | Description
+Key | Value Type     | Description
 --------- | --------- | ------- 
 count     | Number    | Number of votes
 
@@ -183,7 +190,7 @@ count     | Number    | Number of votes
 An comment object contains the number of comments for a specific gag
 
 ####Properties
-Properties | Type     | Description
+Key | Value Type     | Description
 --------- | --------- | ------- 
 count     | Number    | Number of comments
 
