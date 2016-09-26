@@ -11,23 +11,24 @@ $ node 9gag.js
 ##Documentation
 Method | Endpoint
 -------|---------
-GET | [/gag/{gagId}](#get-gaggagid)
-GET | [/{section}?subSection={subSection}&limit={limit}](#get-sectionsubsectionsubsectionlimitlimit)
+GET    | [/gag/{gagId}](#get-gaggagid)
+GET    | [/{section}?subSection={subSection}&limit={limit}](#get-sectionsubsectionsubsectionlimitlimit)
 
-Object Model |
------- |
-[Images](#images) |
-[Media](#media) | 
-[Votes](#votes) |
+Object Model          |
+--------------------- |
+[Gag](#gag)           |
+[Images](#images)     |
+[Media](#media)       | 
+[Votes](#votes)       |
 [Comments](#comments) |
 
 ### GET /gag/{gagId}
 Get data for a specific gag.
 
 ####Parameters
-Key      | Required? | Value Type      | Default | Description
---------- | ------- |--------- | ------- | -----------
-gagId     | ✓ |String    | N/A     | ID of the gag
+Key       | Required? | Value Type | Default | Description
+--------- | --------- |----------- | ------- | -----------
+gagId     | ✓         | String     | N/A     | ID of the gag
 
 ####Response
 Key      | Value Type      |  Description | Note
