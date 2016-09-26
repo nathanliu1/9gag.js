@@ -9,19 +9,25 @@ $ node 9gag.js
 ```
 
 ##Documentation
-- [GET /gag/:gagId](#get-gaggagid)
-- [OBJECT Images](#images)
-- [OBJECT Media](#media)
-- [OBJECT Votes](#votes)
-- [OBJECT Comments](#comments)
+Method | Endpoint
+-------|---------
+GET | [/gag/{gagId}](#get-gaggagid)
+GET | [/{section}?subSection={subSection}&limit={limit}](#get-sectionsubsectionsubsectionlimitlimit)
 
-### GET /gag/:gagId
+Object Model |
+------ |
+[Images](#images) |
+[Media](#media) | 
+[Votes](#votes) |
+[Comments](#comments) |
+
+### GET /gag/{gagId}
 Get data for a specific gag.
 
 ####Parameters
-Name      | Type      | Default | Description
---------- | --------- | ------- | -----------
-gagId     | String    | N/A     | ID of the gag
+Name      | Required? | Type      | Default | Description
+--------- | ------- |--------- | ------- | -----------
+gagId     | ✓ |String    | N/A     | ID of the gag
 
 ####Response
 Name      | Type      |  Description | Note
@@ -68,6 +74,83 @@ Response
 }
 ```
 
+### GET /{section}?subSection={subSection}&limit={limit}
+Get the gags from a particular section and sub-section
+
+Currently availabe sections: 
+> 'hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely'
+
+Currently availabe sub-sections: 
+> 'hot', 'fresh'
+
+####Parameters
+Name      | Required? |Type      | Default | Description
+--------- | ------ |--------- | ------- | -----------
+section    |✓ | String    | N/A     | The section of the gag
+subSection  |  | String    | hot     | The sub-section of the gag
+limit       | | Number     | 1 | The number of gags one would like to get
+
+####Response
+Name      | Type      |  Description | Note
+--------- | --------- | ------- | -----------
+status     | Number    | HTTP status code
+message     | String    |  Message of the status code
+data     | Array | An array of [gag data](#get-gaggagid)
+
+####Example
+REST Call
+```
+localhost:3000/girl?subSection=hot&limit=2
+```
+Response
+```json
+{  
+    "status":200,
+    "message":"OK",
+    "data":[{
+        "id":"aopAw22",
+        "caption":"My whole life is a lie ...",
+        "images":{  
+            "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
+            "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
+            "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
+            "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
+        },
+        "media":{  
+            "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
+            "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
+        },
+        "link":"http://9gag.com/gag/aopAw22",
+        "votes":{  
+            "count":12656
+        },
+        "comments":{  
+            "count":628
+        }
+    }, {
+        "id":"aopAw22",
+        "caption":"My whole life is a lie ...",
+        "images":{  
+            "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
+            "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
+            "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
+            "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
+        },
+        "media":{  
+            "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
+            "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
+        },
+        "link":"http://9gag.com/gag/aopAw22",
+        "votes":{  
+            "count":12656
+        },
+        "comments":{  
+            "count":628
+        }
+    }]
+}
+```
+
 ###Images
 An image object contains a gag image with various sizes.
 
@@ -104,6 +187,6 @@ Properties | Type     | Description
 --------- | --------- | ------- 
 count     | Number    | Number of comments
 
-###Contribution
+##Contribution
 https://github.com/k3min/infinigag
 
