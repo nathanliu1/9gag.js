@@ -19,8 +19,7 @@ Object Model          |
 [Gag](#gag)           |
 [Images](#images)     |
 [Media](#media)       | 
-[Votes](#votes)       |
-[Comments](#comments) |
+[Share](#share)
 
 ### GET /gag/{gagId}
 Get data for a specific gag.
@@ -47,7 +46,7 @@ Response
 {  
     "status":200,
     "message":"OK",
-    "gag":{
+    "gag":{  
         "id":"aopAw22",
         "caption":"My whole life is a lie ...",
         "images":{  
@@ -56,17 +55,14 @@ Response
             "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
             "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
         },
+        "next":"aGDrYqZ",
         "media":{  
             "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
             "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
         },
-        "link":"http://9gag.com/gag/aopAw22",
-        "votes":{  
-            "count":12656
-        },
-        "comments":{  
-            "count":628
-        }
+        "url":"http://9gag.com/gag/aopAw22",
+        "votes":17985,
+        "comments":878
     }
 }
 ```
@@ -92,59 +88,32 @@ Key      | Value Type      |  Description | Note
 --------- | --------- | ------- | -----------
 status     | Number    | HTTP status code
 message     | String    |  Message of the status code
-data     | Array | An array of [gag](#gag)
+data     | Array | An array of gag id
+section | String | The section of the gag
+subSection | String | The sub-section of the gag
 
 ####Example
 REST Call
 ```
-localhost:3000/girl?subSection=hot&limit=2
+localhost:3000/girl?subSection=hot&limit=8
 ```
 Response
 ```json
 {  
     "status":200,
     "message":"OK",
-    "data":[{
-        "id":"aopAw22",
-        "caption":"My whole life is a lie ...",
-        "images":{  
-            "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
-            "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
-            "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
-            "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
-        },
-        "media":{  
-            "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
-            "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
-        },
-        "link":"http://9gag.com/gag/aopAw22",
-        "votes":{  
-            "count":12656
-        },
-        "comments":{  
-            "count":628
-        }
-    }, {
-        "id":"aopAw22",
-        "caption":"My whole life is a lie ...",
-        "images":{  
-            "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
-            "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
-            "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
-            "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
-        },
-        "media":{  
-            "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
-            "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
-        },
-        "link":"http://9gag.com/gag/aopAw22",
-        "votes":{  
-            "count":12656
-        },
-        "comments":{  
-            "count":628
-        }
-    }]
+    "data": [
+        "a9Y43jL",
+        "axDeMo2",
+        "ae6yx1p",
+        "amzbxr9",
+        "ajDGQW1",
+        "axDnXBb",
+        "aDGrw4G",
+        "aK3ngdg"
+    ],
+    "section": "girl",
+    "subSection": "hot"
 }
 ```
 
@@ -156,8 +125,10 @@ caption     | String    | Caption of the gag
 images     | [Image](#images)     | The images of the gag
 media     | [Media](#media)     | ID of the gag (Only available if the gag is a GIF)
 link     | String    | 9gag.com link of the gag
-votes     | [Votes](#votes)     |  Contains the number of votes for the gag
-comments     | [Comments](#comments)     |  Contains the number of comments for the gag
+next     | String    | The gag id for the next gag
+share    | [Share](#share) | The share links of the gag
+votes     | Number     |  Contains the number of votes for the gag
+comments     | Number     |  Contains the number of comments for the gag
 
 ###Images
 An image object contains a gag image with various sizes.
@@ -179,21 +150,16 @@ Key | Value Type     | Description
 mp4     | string    | The animation of the gag, in .mp4
 webm     | string    | The animation of the gag, in .webm
 
-###Votes
-An vote object contains the number of votes for a specific gag
+###Share
+A Share object contains various URL which enable users to share the gag
 
 ####Properties
 Key | Value Type     | Description
 --------- | --------- | ------- 
-count     | Number    | Number of votes
-
-###Comments
-An comment object contains the number of comments for a specific gag
-
-####Properties
-Key | Value Type     | Description
---------- | --------- | ------- 
-count     | Number    | Number of comments
+facebook     | String    | A share link for Facebook
+twitter     | String    | A share link for Twitter
+googlePlus     | String    | A share link for Google+
+pinterest     | String    | A share link for Pinterest
 
 ##Contribution
 https://github.com/k3min/infinigag
