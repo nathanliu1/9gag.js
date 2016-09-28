@@ -12,14 +12,14 @@ const SUCCESS_MESSAGE = 'OK';
 const BAD_REQUEST = 400;
 const BAD_REQUEST_MESSAGE = 'UNKNOWN REQUEST KEYWORD';
 const NOT_FOUND = 404;
-const NOT_FOUND_MESSAGE = 'RESOURSE NOT FOUND';
-const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 
+const NOT_FOUND_MESSAGE = 'RESOURCE NOT FOUND';
+const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga',
                     'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
 const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh']
 
 // Core 9GAG API Object
 var _9gag = {
-    getPost: function(url, gagId, callback) {        
+    getPost: function(url, gagId, callback) {
         // Get data for the gag site
         request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
@@ -33,6 +33,7 @@ var _9gag = {
                 gag['id'] = gagId;
                 gag['caption'] = $('.badge-item-title').html();
                 gag['images'] = _util.generateImagesUrl(gagId);
+                gag['next'] = 'http://9gag.com' + $('.badge-next-post-entry').attr('href');
                 // Check if the gag is a gif
                 if ($('.badge-animated-cover').length > 0) {
                     gag['media'] = _util.generateMediaUrl(gagId);
@@ -99,7 +100,7 @@ var _util = {
     },
     isSectionValid: function(req) {
         // 1. Check if the requested section is a valid section
-        // 2. Check if the requested section is in SPECIAL_SECTION_LIST ['hot', 'trending', 'fresh']. 
+        // 2. Check if the requested section is in SPECIAL_SECTION_LIST ['hot', 'trending', 'fresh'].
         //    if it is, make sure the user did not provide a subSection
         // 3. Make sure subSection is only 'hot' or 'fresh'. If the user did not provide a subSection, it will be 'hot' by default
         if (!_.includes(SECTION_LIST, req.params.section)) {
