@@ -33,12 +33,12 @@ var _9gag = {
                 gag['id'] = gagId;
                 gag['caption'] = $('.badge-item-title').html();
                 gag['images'] = _util.generateImagesUrl(gagId);
-                gag['next'] = 'http://9gag.com' + $('.badge-next-post-entry').attr('href');
+                gag['next'] = $('.badge-next-post-entry').attr('href').substring(5, 12);
                 // Check if the gag is a gif
                 if ($('.badge-animated-cover').length > 0) {
                     gag['media'] = _util.generateMediaUrl(gagId);
                 }
-                gag['link'] = 'http://9gag.com/gag/' + gagId;
+                gag['url'] = 'http://9gag.com/gag/' + gagId;
                 gag['votes'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
                 gag['comments'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
                 response['gag'] = gag;
