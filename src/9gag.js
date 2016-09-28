@@ -30,6 +30,7 @@ var _9gag = {
                 response['status'] = SUCCESS;
                 response['message'] = SUCCESS_MESSAGE;
                 var gag = {};
+                gag['id'] = gagId;
                 gag['caption'] = $('.badge-item-title').html();
                 gag['images'] = _util.generateImagesUrl(gagId);
                 // Check if the gag is a gif
@@ -37,10 +38,8 @@ var _9gag = {
                     gag['media'] = _util.generateMediaUrl(gagId);
                 }
                 gag['link'] = 'http://9gag.com/gag/' + gagId;
-                gag['votes'] = {};
-                gag['votes']['count'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
-                gag['comments'] = {};
-                gag['comments']['count'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
+                gag['votes'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
+                gag['comments'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
                 response['gag'] = gag;
                 // Callback
                 callback(response);
