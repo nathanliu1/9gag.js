@@ -115,7 +115,7 @@ var _util = {
         // Checking if there is extra parameters, since we do not want extra parameters
         return !req.params['0'];
     }
-};  
+};
 
 // API STARTS HERE
 
