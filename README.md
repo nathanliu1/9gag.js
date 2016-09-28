@@ -1,5 +1,5 @@
 # 9gag.js - Unofficial API for 9gag.com
-##Installation Guide
+##Installation Guideline
 Pre-requisites: Node.js
 ```shell
 $ cd 9gag.js
@@ -7,6 +7,15 @@ $ npm install
 $ cd src
 $ node 9gag.js
 ```
+For developing and debugging, use ```nodemon 9gag.js``` instead of ```node 9gag.js```. ```nodemon``` is a useful tool that automatically restart the server when it detects changes in ```9gag.js``` 
+
+##Contribution Guideline
+1. Use **spaces** instead of **tabs** for indention
+2. Use `'` instead of `"` for strings
+3. Do not directly commit to `master`, checkout a seperate branch and make a pull request if necessary
+4. Be modular! (Create seperate methods in ```_util``` object instead of craming everything into one method)
+5. Please reference the GitHub issue as you make a PR
+6. Please comment!
 
 ##Documentation
 Method | Endpoint
@@ -19,7 +28,7 @@ Object Model          |
 [Gag](#gag)           |
 [Images](#images)     |
 [Media](#media)       | 
-[Share](#share)
+[Share](#share)       |
 
 ### GET /gag/{gagId}
 Get data for a specific gag.
@@ -118,6 +127,9 @@ Response
 ```
 
 ###Gag
+A gag object contains information about the gag.
+
+####Properties
 Key | Value Type     | Description
 ------------|-------|-------
 id     | String    | ID of the gag
