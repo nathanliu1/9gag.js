@@ -13,17 +13,15 @@ const BAD_REQUEST = 400;
 const BAD_REQUEST_MESSAGE = 'UNKNOWN REQUEST KEYWORD';
 const NOT_FOUND = 404;
 const NOT_FOUND_MESSAGE = 'RESOURSE NOT FOUND';
-const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
+const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 
+                    'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
 const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh']
 
 // Core 9GAG API Object
 var _9gag = {
-    getPost: function(gagId, callback) {
-        // Base URL for a gag
-        var site = 'http://9gag.com/gag/' + gagId;
-        
+    getPost: function(url, gagId, callback) {        
         // Get data for the gag site
-        request(site, function (error, res, body) {
+        request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
                 var $ = cheerio.load(body);
 
@@ -48,6 +46,35 @@ var _9gag = {
                 callback(response);
             } else {
                 // If we fail to request from gag site
+                callback(undefined);
+            }
+        });
+    },
+    getPosts: function(url, limit, callback) {
+        request(url, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                var $ = cheerio.load(body);
+
+                // Construct a response
+                var response = {}
+                response['status'] = SUCCESS;
+                response['message'] = SUCCESS_MESSAGE;
+
+                // Go throught each gag on the page to get each gag id
+                var data = [];
+                _.each($('.badge-item-title'), function(gag, i) {
+                    // Make sure number of extracted gags does not exceed the limit that the user desires
+                    if (i < limit) {
+                        // Get gag id from href attribute and minor string clean up
+                        var gagId = cheerio.load(gag)('a').attr('href').replace('/gag/', '');
+                        data.push(gagId.substring(0, 7));
+                    }
+                });
+
+                response['data'] = data;
+
+                callback(response);
+            } else {
                 callback(undefined);
             }
         });
@@ -78,10 +105,10 @@ var _util = {
         // 3. Make sure subSection is only 'hot' or 'fresh'. If the user did not provide a subSection, it will be 'hot' by default
         if (!_.includes(SECTION_LIST, req.params.section)) {
             return false;
-        } else if (_.includes(SPECIAL_SECTION_LIST, req.params.section) && req.params.subSection != undefined) {
+        } else if (_.includes(SPECIAL_SECTION_LIST, req.params.section) && req.query.subSection != undefined) {
             return false;
         } else if (!_.includes(SPECIAL_SECTION_LIST, req.params.section)) {
-            if (req.params.subSection != undefined && req.params.subSection != 'hot' && req.params.subSection != 'fresh') {
+            if (!_.includes(['hot', 'fresh', undefined], req.query.subSection)) {
                 return false;
             }
         }
@@ -99,7 +126,9 @@ app.get('/gag/:gagId', function(req, res) {
         res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
         return;
     }
-    _9gag.getPost(req.params.gagId, function(response) {
+
+    var url = 'http://9gag.com/gag/' + req.params.gagId;
+    _9gag.getPost(url, req.params.gagId, function(response) {
         // Handle unknown gag
         if (!response) {
             res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
@@ -110,9 +139,36 @@ app.get('/gag/:gagId', function(req, res) {
     });
 });
 
-app.get('/:section/:subSection*?', function(req, res) {
+app.get('/:section/', function(req, res) {
+    // Check if the URL is valid
     if (_util.isSectionValid(req)) {
-        res.json({'status': SUCCESS, 'message': req.params.section + ' ' + req.params.subSection});
+        var url = 'http://9gag.com/' + req.params.section + '/' + (!req.query.subSection ? '' : req.query.subSection);
+
+        var limit;
+        try {
+            limit = parseInt(req.query.limit);
+        } catch (e) { 
+            limit = 10;
+        }
+        if (limit < 0) {
+            res.json({'status': BAD_REQUEST, 'message': BAD_REQUEST_MESSAGE});
+            return;
+        }
+
+        _9gag.getPosts(url, limit, function(response) {
+            if (!response) {
+                res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+                return;
+            }
+
+            // Add section and subSection key to response
+            response['section'] = req.params.section;
+            if (!_.includes(SPECIAL_SECTION_LIST, req.params.section)) {
+                response['subSection'] = !req.query.subSection ? 'hot' : req.query.subSection;
+            }
+
+            res.json(response);
+        });
     } else {
         res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
     }
