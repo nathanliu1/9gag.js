@@ -29,18 +29,19 @@ var _9gag = {
                 var response = {};
                 response['status'] = SUCCESS;
                 response['message'] = SUCCESS_MESSAGE;
-                response['id'] = gagId;
-                response['caption'] = $('.badge-item-title').html();
-                response['images'] = _util.generateImagesUrl(gagId);
+                response['gag'] = {};
+                response['gag']['id'] = gagId;
+                response['gag']['caption'] = $('.badge-item-title').html();
+                response['gag']['images'] = _util.generateImagesUrl(gagId);
                 // Check if the gag is a gif
                 if ($('.badge-animated-cover').length > 0) {
-                    response['media'] = _util.generateMediaUrl(gagId);
+                    response['gag']['media'] = _util.generateMediaUrl(gagId);
                 }
-                response['link'] = 'http://9gag.com/gag/' + gagId;
-                response['votes'] = {};
-                response['votes']['count'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
-                response['comments'] = {};
-                response['comments']['count'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
+                response['gag']['link'] = 'http://9gag.com/gag/' + gagId;
+                response['gag']['votes'] = {};
+                response['gag']['votes']['count'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
+                response['gag']['comments'] = {};
+                response['gag']['comments']['count'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
 
                 // Callback
                 callback(response);
