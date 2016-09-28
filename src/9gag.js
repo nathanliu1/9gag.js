@@ -145,14 +145,12 @@ app.get('/:section/', function(req, res) {
         var url = 'http://9gag.com/' + req.params.section + '/' + (!req.query.subSection ? '' : req.query.subSection);
 
         var limit;
-        try {
-            limit = parseInt(req.query.limit);
-        } catch (e) { 
-            limit = 10;
-        }
+        limit = parseInt(req.query.limit);
         if (limit < 0) {
             res.json({'status': BAD_REQUEST, 'message': BAD_REQUEST_MESSAGE});
             return;
+        } else if (isNaN(limit)) {
+            limit = 10;
         }
 
         _9gag.getPosts(url, limit, function(response) {
