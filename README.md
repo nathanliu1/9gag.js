@@ -21,7 +21,7 @@ For developing and debugging, use ```nodemon 9gag.js``` instead of ```node 9gag.
 Method | Endpoint
 -------|---------
 GET    | [/gag/{gagId}](#get-gaggagid)
-GET    | [/{section}?subSection={subSection}&loadMoreId={loadMoreId}](#get-sectionsubsectionsubsectionloadMoreIdloadMoreId)
+GET    | [/{section}?subSection={subSection}&loadMoreId={loadMoreId}](#get-sectionsubsectionsubsectionloadmoreidloadmoreid)
 
 Object Model          |
 --------------------- |
@@ -48,7 +48,7 @@ gag | [Gag](#gag) | A gag
 ####Example
 REST Call
 ```
-localhost:3000/gag/aopAw22
+localhost:3000/gag/aOv5VG6
 ```
 Response
 ```json
@@ -79,7 +79,7 @@ Response
 ```
 
 ### GET /{section}?subSection={subSection}&loadMoreId={loadMoreId}
-Get 10 gags from a particular section and sub-section
+Get 10 gags from a particular section and sub-section. Since 9GAG is an infinite scrolling website, gags will never stop displaying. Use loadMoreId to find the next 10 gags.
 
 Currently availabe sections: 
 > 'hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely'
