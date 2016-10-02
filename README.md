@@ -21,7 +21,7 @@ For developing and debugging, use ```nodemon 9gag.js``` instead of ```node 9gag.
 Method | Endpoint
 -------|---------
 GET    | [/gag/{gagId}](#get-gaggagid)
-GET    | [/{section}?subSection={subSection}&limit={limit}](#get-sectionsubsectionsubsectionlimitlimit)
+GET    | [/{section}?subSection={subSection}&loadMoreId={loadMoreId}](#get-sectionsubsectionsubsectionloadMoreIdloadMoreId)
 
 Object Model          |
 --------------------- |
@@ -52,32 +52,34 @@ localhost:3000/gag/aopAw22
 ```
 Response
 ```json
-{  
-    "status":200,
-    "message":"OK",
-    "gag":{  
-        "id":"aopAw22",
-        "caption":"My whole life is a lie ...",
-        "images":{  
-            "small":"http://img-9gag-fun.9cache.com/photo/aopAw22_220x145.jpg",
-            "cover":"http://img-9gag-fun.9cache.com/photo/aopAw22_460c.jpg",
-            "normal":"http://img-9gag-fun.9cache.com/photo/aopAw22_460s.jpg",
-            "large":"http://img-9gag-fun.9cache.com/photo/aopAw22_700b.jpg"
-        },
-        "next":"aGDrYqZ",
-        "media":{  
-            "mp4":"http://img-9gag-fun.9cache.com/photo/aopAw22_460sv.mp4",
-            "webm":"http://img-9gag-fun.9cache.com/photo/aopAw22_460svwm.webm"
-        },
-        "url":"http://9gag.com/gag/aopAw22",
-        "votes":17985,
-        "comments":878
+{
+  "status": 200,
+  "message": "OK",
+  "gag": {
+    "id": "a7dP8Ew",
+    "title": "Consult electrician before removing plate",
+    "images": {
+      "small": "http://img-9gag-fun.9cache.com/photo/a7dP8Ew_220x145.jpg",
+      "cover": "http://img-9gag-fun.9cache.com/photo/a7dP8Ew_460c.jpg",
+      "normal": "http://img-9gag-fun.9cache.com/photo/a7dP8Ew_460s.jpg",
+      "large": "http://img-9gag-fun.9cache.com/photo/a7dP8Ew_700b.jpg"
+    },
+    "next": "aOv5VG6",
+    "url": "http://9gag.com/gag/a7dP8Ew",
+    "votes": 15356,
+    "comments": 744,
+    "share": {
+      "facebook": "https://www.facebook.com/sharer/sharer.php?u=http://9gag.com/gag/a7dP8Ew?ref=fb.s",
+      "twitter": "https://twitter.com/intent/tweet?via=9GAG&source=tweetbutton&original_referer=http://9gag.com/gag/a7dP8Ew?ref=t&text=Consult%20electrician%20before%20removing%20plate!&url=http://9gag.com/gag/a7dP8Ew?ref=t",
+      "googlePlus": "https://plus.google.com/share?url=http://9gag.com/gag/a7dP8Ew?ref=gp",
+      "pinterest": "https://www.pinterest.com/pin/create/button/?url=http://9gag.com/gag/a7dP8Ew?ref=pn&media=http://img-9gag-fun.9cache.com/photo/a7dP8Ew_700b.jpg&description=Consult%20electrician%20before%20removing%20plate"
     }
+  }
 }
 ```
 
-### GET /{section}?subSection={subSection}&limit={limit}
-Get the gags from a particular section and sub-section
+### GET /{section}?subSection={subSection}&loadMoreId={loadMoreId}
+Get 10 gags from a particular section and sub-section
 
 Currently availabe sections: 
 > 'hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga', 'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely'
@@ -90,7 +92,7 @@ Key      | Required? |Value Type      | Default | Description
 --------- | ------ |--------- | ------- | -----------
 section    |✓ | String    | N/A     | The section of the gag
 subSection  |  | String    | hot     | The sub-section of the gag
-limit       | | Number     | 1 | The number of gags one would like to get
+loadMoreId       | | String     | N/A | The id that the user need to navigate to the next 10 gags
 
 ####Response
 Key      | Value Type      |  Description | Note
@@ -104,25 +106,54 @@ subSection | String | The sub-section of the gag
 ####Example
 REST Call
 ```
-localhost:3000/girl?subSection=hot&limit=8
+localhost:3000/wtf
 ```
 Response
 ```json
-{  
-    "status":200,
-    "message":"OK",
-    "data": [
-        "a9Y43jL",
-        "axDeMo2",
-        "ae6yx1p",
-        "amzbxr9",
-        "ajDGQW1",
-        "axDnXBb",
-        "aDGrw4G",
-        "aK3ngdg"
-    ],
-    "section": "girl",
-    "subSection": "hot"
+{
+  "status": 200,
+  "message": "OK",
+  "data": [
+    "aYL5B2x",
+    "aK35y63",
+    "a4jy84d",
+    "ajDwGrG",
+    "aAP5NWL",
+    "adXw4RZ",
+    "aDG5Pyx",
+    "agGwdmn",
+    "a84Onv6",
+    "a7dXG1x"
+  ],
+  "loadMoreId": "a7dXG1x%2Ca84Onv6%2CagGwdmn",
+  "section": "wtf",
+  "subSection": "hot"
+}
+```
+REST Call
+```
+localhost:3000/wtf?loadMoreId=a7dXG1x%2Ca84Onv6%2CagGwdmn
+```
+Response
+```json
+{
+  "status": 200,
+  "message": "OK",
+  "data": [
+    "a5r3xQE",
+    "apLw845",
+    "a9Y0Dp6",
+    "aGD57D6",
+    "arNw85B",
+    "adXwoZ2",
+    "adXwo49",
+    "a4jy59p",
+    "aPW2oDG",
+    "azAwdoZ"
+  ],
+  "loadMoreId": "azAwdoZ%2CaPW2oDG%2Ca4jy59p",
+  "section": "wtf",
+  "subSection": "hot"
 }
 ```
 
