@@ -31,7 +31,7 @@ var _9gag = {
                 response['message'] = SUCCESS_MESSAGE;
                 var gag = {};
                 gag['id'] = gagId;
-                gag['caption'] = $('.badge-item-title').html();
+                gag['title'] = $('.badge-item-title').html();
                 gag['images'] = _util.generateImagesUrl(gagId);
                 gag['next'] = $('.badge-next-post-entry').attr('href').substring(5, 12);
                 // Check if the gag is a gif
@@ -41,6 +41,7 @@ var _9gag = {
                 gag['url'] = 'http://9gag.com/gag/' + gagId;
                 gag['votes'] = parseInt($('.badge-item-love-count').html().replace(',', ''));
                 gag['comments'] = parseInt($('.badge-item-comment-count').html().replace(',', ''));
+                gag['share'] = _util.generateShareUrl(gagId, gag['title']);
                 response['gag'] = gag;
                 // Callback
                 callback(response);
@@ -114,6 +115,18 @@ var _util = {
         }
         // Checking if there is extra parameters, since we do not want extra parameters
         return !req.params['0'];
+    }, 
+    generateShareUrl: function(gagId, title) {
+        var shareUrl = {};
+        var facebookBaseUrl = 'https://www.facebook.com/sharer/sharer.php?u=http://9gag.com/gag/';
+        var twitterBaseUrl = 'https://twitter.com/intent/tweet?via=9GAG&source=tweetbutton&original_referer=http://9gag.com/gag/';
+        var googlePlusBaseUrl = 'https://plus.google.com/share?url=http://9gag.com/gag/';
+        var pinterestBaseUrl = 'https://www.pinterest.com/pin/create/button/?url=http://9gag.com/gag/';
+        shareUrl['facebook'] = facebookBaseUrl + gagId + '?ref=fb.s';
+        shareUrl['twitter'] = twitterBaseUrl + gagId + '?ref=t&text=' + encodeURIComponent(title) + '!&url=http://9gag.com/gag/' + gagId + '?ref=t';
+        shareUrl['googlePlus'] = googlePlusBaseUrl + gagId + '?ref=gp';
+        shareUrl['pinterest'] = pinterestBaseUrl + gagId + '?ref=pn&media=http://img-9gag-fun.9cache.com/photo/' + gagId + '_700b.jpg&description=' + encodeURIComponent(title);
+        return shareUrl;
     }
 };
 
