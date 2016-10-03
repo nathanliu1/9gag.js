@@ -51,7 +51,10 @@ var _9gag = {
             }
         });
     },
-    getPosts: function(url, limit, callback) {
+    getPosts: function(url, loadMoreId, callback) {
+        // If there is a loadMoreId available, change the url
+        if (!!loadMoreId) url += '?id=' + loadMoreId;
+
         request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
                 var $ = cheerio.load(body);
@@ -65,7 +68,7 @@ var _9gag = {
                 var data = [];
                 _.each($('.badge-item-title'), function(gag, i) {
                     // Make sure number of extracted gags does not exceed the limit that the user desires
-                    if (i < limit) {
+                    if (i < 10) {
                         // Get gag id from href attribute and minor string clean up
                         var gagId = cheerio.load(gag)('a').attr('href').replace('/gag/', '');
                         data.push(gagId.substring(0, 7));
@@ -73,7 +76,7 @@ var _9gag = {
                 });
 
                 response['data'] = data;
-
+                response['loadMoreId'] = data[9] + '%2C' +  data[8] + '%2C' + data[7]
                 callback(response);
             } else {
                 callback(undefined);
@@ -157,16 +160,7 @@ app.get('/:section/', function(req, res) {
     if (_util.isSectionValid(req)) {
         var url = 'http://9gag.com/' + req.params.section + '/' + (!req.query.subSection ? '' : req.query.subSection);
 
-        var limit;
-        limit = parseInt(req.query.limit);
-        if (limit < 0) {
-            res.json({'status': BAD_REQUEST, 'message': BAD_REQUEST_MESSAGE});
-            return;
-        } else if (isNaN(limit)) {
-            limit = 10;
-        }
-
-        _9gag.getPosts(url, limit, function(response) {
+        _9gag.getPosts(url, req.query.loadMoreId, function(response) {
             if (!response) {
                 res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
                 return;
