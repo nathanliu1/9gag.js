@@ -82,7 +82,7 @@ var _9gag = {
                 response['data'] = data;
                 // 9gag used last 3 gag to determine loadMoreId
                 if (data.length == 10) {
-                    response['loadMoreId'] = data[9] + '%2C' +  data[8] + '%2C' + data[7]
+                    response['loadMoreId'] = data[9] + '%2C' +  data[8] + '%2C' + data[7];
                 } else {
                     response['loadMoreId'] = '';
                 }
