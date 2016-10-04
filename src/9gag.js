@@ -53,7 +53,12 @@ var _9gag = {
     },
     getPosts: function(url, loadMoreId, callback) {
         // If there is a loadMoreId available, change the url
-        if (!!loadMoreId) url += '?id=' + loadMoreId;
+        // Use afterId as a query parameter for user-specific loadMoreId
+        // Otherwise, use id as a query parameter for section-specific loadMoreId
+        if (!!loadMoreId) {
+            if (url.indexOf('http://9gag.com/u/') != -1) url += '?afterId=' + loadMoreId;
+            else url += '?id=' + loadMoreId;
+        }
 
         request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
@@ -74,9 +79,13 @@ var _9gag = {
                         data.push(gagId.substring(0, 7));
                     }
                 });
-
                 response['data'] = data;
-                response['loadMoreId'] = data[9] + '%2C' +  data[8] + '%2C' + data[7]
+                // 9gag used last 3 gag to determine loadMoreId
+                if (data.length == 10) {
+                    response['loadMoreId'] = data[9] + '%2C' +  data[8] + '%2C' + data[7]
+                } else {
+                    response['loadMoreId'] = '';
+                }
                 callback(response);
             } else {
                 callback(undefined);
@@ -204,6 +213,30 @@ app.get('/user/:userId', function(req, res) {
             res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
             return;
         }
+        res.json(response);
+    })
+});
+
+app.get('/user/:userId/posts', function(req, res) {
+    var url = 'http://9gag.com/u/' + req.params.userId + '/posts';
+    _9gag.getPosts(url, req.query.loadMoreId, function(response) {
+        if (!response) {
+            res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+            return;
+        }
+        response['userId'] = req.params.userId;
+        res.json(response);
+    })
+});
+
+app.get('/user/:userId/upvotes', function(req, res) {
+    var url = 'http://9gag.com/u/' + req.params.userId + '/likes';
+    _9gag.getPosts(url, req.query.loadMoreId, function(response) {
+        if (!response) {
+            res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+            return;
+        }
+        response['userId'] = req.params.userId;
         res.json(response);
     })
 });
