@@ -82,6 +82,24 @@ var _9gag = {
                 callback(undefined);
             }
         });
+    },
+    getUserOverview: function(url, userId, callback) {
+        request(url, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                var $ = cheerio.load(body);
+
+                // Construct a response
+                var response = {}
+                response['status'] = SUCCESS;
+                response['message'] = SUCCESS_MESSAGE;
+                response['userId'] = userId;
+                response['profileImage'] = $('.profile-header .avatar-container img').attr('src');
+                response['url'] = url;
+                callback(response);
+            } else {
+                callback(undefined);
+            }
+        });
     }
 };
 
@@ -177,6 +195,17 @@ app.get('/:section/', function(req, res) {
     } else {
         res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
     }
+});
+
+app.get('/user/:userId', function(req, res) {
+    var url = 'http://9gag.com/u/' + req.params.userId;
+    _9gag.getUserOverview(url, req.params.userId, function(response) {
+        if (!response) {
+            res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+            return;
+        }
+        res.json(response);
+    })
 });
 
 app.get('*', function(req, res) {
