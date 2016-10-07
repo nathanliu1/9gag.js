@@ -109,6 +109,31 @@ var _9gag = {
                 callback(undefined);
             }
         });
+    },
+    getComments: function(url, callback) {
+        console.log(url);
+        request(url, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                var response = {}
+                response['status'] = SUCCESS;
+                response['message'] = SUCCESS_MESSAGE;
+                var comments = [];
+                var payload = JSON.parse(body).payload;
+                _.each(payload.comments, function(comment, i) {
+                    var commentObj = {};
+                    commentObj['commentId'] = comment.commentId;
+                    commentObj['userId'] = comment.user.displayName;
+                    commentObj['text'] = comment.text;
+                    comments.push(commentObj);
+                    console.log(comment.user.displayName + ' : ' + comment.text);
+                    if (i == 9) response['loadMoreId'] = comment.orderKey;
+                });
+                response['comments'] = comments;
+                callback(response);
+            } else {
+                callback(undefined);
+            }
+        });
     }
 };
 
@@ -239,6 +264,35 @@ app.get('/user/:userId/upvotes', function(req, res) {
         response['userId'] = req.params.userId;
         res.json(response);
     })
+});
+
+app.get('/comment/:gagId', function(req, res) {
+    var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
+    var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
+    // Comments are sorted by its score by default
+    var section = 'score';
+    if (req.query.section) {
+        if (req.query.section == 'fresh') {
+            section='ts'
+        }
+    }
+
+    //Append loadMoreId
+    var url = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=1&order=' + section;
+    if (req.query.loadMoreId) {
+        url += '&ref=' + req.query.loadMoreId
+    }
+    url += '&origin=9gag.com';
+
+    // A URL that retrieve the comments of a gag post in JSON format
+    _9gag.getComments(url, function(response) {
+        if (!response) {
+            res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+            return;
+        }
+        res.json(response);
+    });
+
 });
 
 app.get('*', function(req, res) {
