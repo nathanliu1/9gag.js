@@ -110,8 +110,7 @@ var _9gag = {
             }
         });
     },
-    getComments: function(url, callback) {
-        console.log(url);
+    getComments: function(url, limit, callback) {
         request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
                 var response = {}
@@ -119,21 +118,65 @@ var _9gag = {
                 response['message'] = SUCCESS_MESSAGE;
                 var comments = [];
                 var payload = JSON.parse(body).payload;
+                var opUserId = payload.opUserId;
                 _.each(payload.comments, function(comment, i) {
+                    if (i == limit) {
+                        callback(comments);
+                        return;
+                    }
                     var commentObj = {};
                     commentObj['commentId'] = comment.commentId;
                     commentObj['userId'] = comment.user.displayName;
-                    commentObj['text'] = comment.text;
+                    commentObj['text'] = comment.richtext;
+                    commentObj['timestamp'] = comment.timestamp;
+                    if (commentObj['childrenCount'] > 0) {
+                        commentObj['childrenCount'] = comment.childrenTotal
+                    }
+                    // Check if commenter is OP
+                    if (comment.userId == opUserId) {
+                        commentObj['isOp'] = true;
+                    }
+                    commentObj['likeCount'] = comment.likeCount;
                     comments.push(commentObj);
-                    console.log(comment.user.displayName + ' : ' + comment.text);
                     if (i == 9) response['loadMoreId'] = comment.orderKey;
                 });
                 response['comments'] = comments;
                 callback(response);
+                //callback(JSON.parse(body));
             } else {
                 callback(undefined);
             }
         });
+    },
+    getCommentChildren: function(url, extractFirstChild, limit, callback) {
+        if (extractFirstChild) {
+            request(url, function (error, res, body) {
+                if (!error && res.statusCode == 200) {
+                    var response = {};
+                    var payload = JSON.parse(body).payload;
+                    var opUserId = payload.opUserId;
+                    var firstChildren = payload.comments[0].children[0];
+                    if (!firstChildren) callback(undefined);
+                    response['commentId'] = firstChildren.commentId;
+                    response['userId'] = firstChildren.user.displayName;
+                    response['text'] = firstChildren.richtext;
+                    if (firstChildren.userId == opUserId) {
+                        response['isOp'] = true;
+                    }
+                    response['timestamp'] = firstChildren.timestamp;
+                    response['likeCount'] = firstChildren.likeCount;
+                    callback(response);
+                }
+            });
+        } else {
+            this.getComments(url, limit, function(response) {
+                if (Array.isArray(response)) {
+                    callback(response);
+                } else {
+                    callback(response.comments);
+                }
+            });
+        }
     }
 };
 
@@ -285,14 +328,51 @@ app.get('/comment/:gagId', function(req, res) {
     url += '&origin=9gag.com';
 
     // A URL that retrieve the comments of a gag post in JSON format
-    _9gag.getComments(url, function(response) {
+    _9gag.getComments(url, undefined, function(response) {
         if (!response) {
             res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
             return;
         }
         res.json(response);
     });
+});
 
+app.get('/comment/:gagId/:commentId', function(req, res) {
+    var commentId = req.params.commentId;
+    var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
+    var commentUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b&url=' + gagUrl + '&count=1&level=2&order=score&mentionMapping=true&commentId=' + commentId + '&origin=9gag.com';
+    if (!req.query.loadMoreId) {
+        _9gag.getCommentChildren(commentUrl, true, undefined, function(firstComment) {
+            var childrenUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b&url=' + gagUrl + '&count=10&level=2&order=score&mentionMapping=true&refCommentId=' + firstComment.commentId + '&origin=9gag.com';
+            console.log(childrenUrl);
+            _9gag.getCommentChildren(childrenUrl, false, 9, function(childrenComment) {
+                var response = {};
+                response['status'] = SUCCESS;
+                response['message'] = SUCCESS_MESSAGE;
+                response['parent'] = req.params.commentId;
+                var comments = _.concat(firstComment, childrenComment);
+                if (comments.length == 10) {
+                    response['loadMoreId'] = comments[9].commentId;
+                }
+                response['comments'] = comments;
+                res.json(response);
+            });
+        });
+    } else {
+        var childrenUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b&url=' + gagUrl + '&count=10&level=2&order=score&mentionMapping=true&refCommentId=' + req.query.loadMoreId + '&origin=9gag.com';
+        _9gag.getCommentChildren(childrenUrl, false, 9, function(childrenComment) {
+            var response = {};
+            response['status'] = SUCCESS;
+            response['message'] = SUCCESS_MESSAGE;
+            response['parent'] = req.params.commentId;
+            var comments = childrenComment;
+            if (comments.length == 9) {
+                response['loadMoreId'] = comments[8].commentId;
+            }
+            response['comments'] = comments;
+            res.json(response);
+        });
+    }
 });
 
 app.get('*', function(req, res) {
