@@ -110,7 +110,7 @@ var _9gag = {
             }
         });
     },
-    getComments: function(url, limit, callback) {
+    getComments: function(url, callback) {
         request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
                 var response = {}
@@ -118,31 +118,15 @@ var _9gag = {
                 response['message'] = SUCCESS_MESSAGE;
                 var comments = [];
                 var payload = JSON.parse(body).payload;
-                var opUserId = payload.opUserId;
                 _.each(payload.comments, function(comment, i) {
-                    if (i == limit) {
-                        callback(comments);
-                        return;
-                    }
-                    var commentObj = {};
-                    commentObj['commentId'] = comment.commentId;
-                    commentObj['userId'] = comment.user.displayName;
-                    commentObj['text'] = comment.richtext;
-                    commentObj['timestamp'] = comment.timestamp;
-                    if (commentObj['childrenCount'] > 0) {
-                        commentObj['childrenCount'] = comment.childrenTotal
-                    }
-                    // Check if commenter is OP
-                    if (comment.userId == opUserId) {
-                        commentObj['isOp'] = true;
-                    }
-                    commentObj['likeCount'] = comment.likeCount;
-                    comments.push(commentObj);
+                    comments.push(_util.processComment(comment, payload.opUserId));
                     if (i == 9) response['loadMoreId'] = comment.orderKey;
                 });
                 response['comments'] = comments;
+                if (payload.hasOwnProperty('refCommentId')) {
+                    response['loadMoreId'] = payload['refCommentId'];
+                }
                 callback(response);
-                //callback(JSON.parse(body));
             } else {
                 callback(undefined);
             }
@@ -225,6 +209,37 @@ var _util = {
         shareUrl['googlePlus'] = googlePlusBaseUrl + gagId + '?ref=gp';
         shareUrl['pinterest'] = pinterestBaseUrl + gagId + '?ref=pn&media=http://img-9gag-fun.9cache.com/photo/' + gagId + '_700b.jpg&description=' + encodeURIComponent(title);
         return shareUrl;
+    },
+    processComment: function(comment, opUserId) {
+        var commentObj = {};
+        commentObj['commentId'] = comment.commentId;
+        commentObj['userId'] = comment.user.displayName;
+        commentObj['text'] = unescape(comment.text);
+        if (comment.userId == opUserId) {
+            commentObj['isOp'] = true;
+        } else {
+            commentObj['isOp'] = false;
+        }
+        if (comment.level == 1) {
+            commentObj['isChild'] = false;
+            commentObj['childrenCount'] = comment.childrenTotal;
+        } else {
+            commentObj['isChild'] = true;
+        }
+        commentObj['timestamp'] = comment.timestamp;
+        commentObj['likeCount'] = comment.likeCount;
+        return commentObj
+    },
+    getFirstCommentChildId: function(url, callback) {
+        request(url, function (error, res, body) {
+            if (!error && res.statusCode == 200) {
+                var opUserId = JSON.parse(body).payload.opUserId;
+                var firstChild = JSON.parse(body).payload.comments[0].children[0];
+                callback(_util.processComment(firstChild, opUserId));
+            } else {
+                callback(undefined);
+            }
+        });
     }
 };
 
@@ -321,14 +336,13 @@ app.get('/comment/:gagId', function(req, res) {
     }
 
     //Append loadMoreId
-    var url = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=1&order=' + section;
+    var url = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=2&order=' + section;
     if (req.query.loadMoreId) {
         url += '&ref=' + req.query.loadMoreId
     }
-    url += '&origin=9gag.com';
 
     // A URL that retrieve the comments of a gag post in JSON format
-    _9gag.getComments(url, undefined, function(response) {
+    _9gag.getComments(url, function(response) {
         if (!response) {
             res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
             return;
@@ -338,38 +352,39 @@ app.get('/comment/:gagId', function(req, res) {
 });
 
 app.get('/comment/:gagId/:commentId', function(req, res) {
-    var commentId = req.params.commentId;
+    var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
-    var commentUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b&url=' + gagUrl + '&count=1&level=2&order=score&mentionMapping=true&commentId=' + commentId + '&origin=9gag.com';
+
+    // If there is no loadMoreId, we need to find the id of the first comment child
+    // We need to use that id to find the rest of the comment children
     if (!req.query.loadMoreId) {
-        _9gag.getCommentChildren(commentUrl, true, undefined, function(firstComment) {
-            var childrenUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b&url=' + gagUrl + '&count=10&level=2&order=score&mentionMapping=true&refCommentId=' + firstComment.commentId + '&origin=9gag.com';
-            console.log(childrenUrl);
-            _9gag.getCommentChildren(childrenUrl, false, 9, function(childrenComment) {
-                var response = {};
-                response['status'] = SUCCESS;
-                response['message'] = SUCCESS_MESSAGE;
-                response['parent'] = req.params.commentId;
-                var comments = _.concat(firstComment, childrenComment);
-                if (comments.length == 10) {
-                    response['loadMoreId'] = comments[9].commentId;
+        var url = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=0&level=2&commentId=' + req.params.commentId;
+        _util.getFirstCommentChildId(url, function(firstChildCommentObj) {
+            if (!firstChildCommentObj) {
+                res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+                return;
+            }
+            // Get the rest of the comment children using the firstChildCommentId
+            var commentUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=1&refCommentId=' + firstChildCommentObj.commentId;
+            _9gag.getComments(commentUrl, function(response) {
+                if (!response) {
+                    res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+                    return;
                 }
-                response['comments'] = comments;
+                // concatenate firstChildCommentId
+                response['comments'] = _.concat(firstChildCommentObj, response['comments']);
+                response['parent'] = req.params.commentId;
                 res.json(response);
             });
         });
     } else {
-        var childrenUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b&url=' + gagUrl + '&count=10&level=2&order=score&mentionMapping=true&refCommentId=' + req.query.loadMoreId + '&origin=9gag.com';
-        _9gag.getCommentChildren(childrenUrl, false, 9, function(childrenComment) {
-            var response = {};
-            response['status'] = SUCCESS;
-            response['message'] = SUCCESS_MESSAGE;
-            response['parent'] = req.params.commentId;
-            var comments = childrenComment;
-            if (comments.length == 9) {
-                response['loadMoreId'] = comments[8].commentId;
+        var commentUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=1&refCommentId=' + req.query.loadMoreId;
+        _9gag.getComments(commentUrl, function(response) {
+            if (!response) {
+                res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
+                return;
             }
-            response['comments'] = comments;
+            response['parent'] = req.params.commentId;
             res.json(response);
         });
     }
