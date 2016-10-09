@@ -133,36 +133,6 @@ var _9gag = {
                 callback(undefined);
             }
         });
-    },
-    getCommentChildren: function(url, extractFirstChild, limit, callback) {
-        if (extractFirstChild) {
-            request(url, function (error, res, body) {
-                if (!error && res.statusCode == 200) {
-                    var response = {};
-                    var payload = JSON.parse(body).payload;
-                    var opUserId = payload.opUserId;
-                    var firstChildren = payload.comments[0].children[0];
-                    if (!firstChildren) callback(undefined);
-                    response['commentId'] = firstChildren.commentId;
-                    response['userId'] = firstChildren.user.displayName;
-                    response['text'] = firstChildren.richtext;
-                    if (firstChildren.userId == opUserId) {
-                        response['isOp'] = true;
-                    }
-                    response['timestamp'] = firstChildren.timestamp;
-                    response['likeCount'] = firstChildren.likeCount;
-                    callback(response);
-                }
-            });
-        } else {
-            this.getComments(url, limit, function(response) {
-                if (Array.isArray(response)) {
-                    callback(response);
-                } else {
-                    callback(response.comments);
-                }
-            });
-        }
     }
 };
 
