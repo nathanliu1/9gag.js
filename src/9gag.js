@@ -1,3 +1,12 @@
+/////////////////////////////////////////////
+//  ___                       _            //
+// / _ \  __ _  __ _  __ _   (_)___        //
+//| (_) |/ _` |/ _` |/ _` |  | / __|       //
+// \__, | (_| | (_| | (_| |_ | \__ \       //
+//   /_/ \__, |\__,_|\__, (_)/ |___/       //
+//       |___/       |___/ |__/            //
+//Author: @chewong, @JasonFok, @nathanliu1 // 
+/////////////////////////////////////////////
 'use strict';
 var express = require('express');
 var request = require('request');
@@ -17,7 +26,7 @@ const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw',
                     'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
 const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh']
 
-// Core 9GAG API Object
+// Core 9GAG API Helper Object
 var _9gag = {
     getPost: function(url, gagId, callback) {
         // Get data for the gag site
@@ -136,7 +145,7 @@ var _9gag = {
     }
 };
 
-// Util Object
+// Utility Object
 var _util = {
     baseContentUrl: 'http://img-9gag-fun.9cache.com/photo/',
     generateImagesUrl: function(gagId) {
@@ -221,9 +230,15 @@ var _util = {
     }
 };
 
-// API STARTS HERE
+///////////////////////////
+// API ROUTE STARTS HERE //
+///////////////////////////
 
-// GET /gag/:gagId
+/**
+ * Get data for a specific gag.
+ *
+ * @param gagId - the id of the gag
+ */
 app.get('/gag/:gagId', function(req, res) {
     // Gag id is invalid if the length is not 7
     if (req.params.gagId.length != 7) {
@@ -243,6 +258,13 @@ app.get('/gag/:gagId', function(req, res) {
     });
 });
 
+/**
+ * Get 10 gags from a particular section and sub-section
+ *
+ * @param section - the section of the gag
+ * @query subSection - the sub-section of the gag
+ * @query loadMoreId - an id that allows user to load the next 10 gags from a particular section and sub-section
+ */
 app.get('/:section/', function(req, res) {
     // Check if the URL is valid
     if (_util.isSectionValid(req)) {
@@ -267,6 +289,11 @@ app.get('/:section/', function(req, res) {
     }
 });
 
+/**
+ * Get the overview of a user
+ *
+ * @param userId - the userId of the user
+ */
 app.get('/user/:userId', function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId;
     _9gag.getUserOverview(url, req.params.userId, function(response) {
@@ -278,6 +305,12 @@ app.get('/user/:userId', function(req, res) {
     })
 });
 
+/**
+ * Get the posts of a user
+ *
+ * @param userId - the userId of the user
+ * @query loadMoreId - an id that allows user to load the next 10 posts that the user posted
+ */
 app.get('/user/:userId/posts', function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId + '/posts';
     _9gag.getPosts(url, req.query.loadMoreId, function(response) {
@@ -290,6 +323,12 @@ app.get('/user/:userId/posts', function(req, res) {
     })
 });
 
+/**
+ * Get the posts that the user upvoted
+ *
+ * @param userId - the userId of the user
+ * @query loadMoreId - an id that allows user to load the next 10 gags that the user upvoted
+ */
 app.get('/user/:userId/upvotes', function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId + '/likes';
     _9gag.getPosts(url, req.query.loadMoreId, function(response) {
@@ -302,6 +341,13 @@ app.get('/user/:userId/upvotes', function(req, res) {
     })
 });
 
+/**
+ * Get the comments of a gag
+ *
+ * @param gagId - the id of the gag
+ * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
+ * @query section - the section of the comments (can be hot or fresh)
+ */
 app.get('/comment/:gagId', function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
@@ -329,6 +375,13 @@ app.get('/comment/:gagId', function(req, res) {
     });
 });
 
+/**
+ * Get the comments of a gag
+ *
+ * @param gagId - the id of the gag
+ * @param commentId - the id of the comment
+ * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
+ */
 app.get('/comment/:gagId/:commentId', function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
@@ -369,6 +422,9 @@ app.get('/comment/:gagId/:commentId', function(req, res) {
     }
 });
 
+/**
+ * Unknown requests will be routed to here
+ */
 app.get('*', function(req, res) {
     res.json({'status': BAD_REQUEST, 'message': BAD_REQUEST_MESSAGE});
 });
