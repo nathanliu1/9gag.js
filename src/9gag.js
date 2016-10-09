@@ -2,7 +2,7 @@
 var express = require('express');
 var request = require('request');
 var cheerio = require('cheerio');
-var _ = require('lodash');
+var _       = require('lodash');
 
 var app = express();
 
@@ -123,6 +123,8 @@ var _9gag = {
                     if (i == 9) response['loadMoreId'] = comment.orderKey;
                 });
                 response['comments'] = comments;
+
+                // Use refCommentId to load more children of a comment
                 if (payload.hasOwnProperty('refCommentId')) {
                     response['loadMoreId'] = payload['refCommentId'];
                 }
@@ -230,11 +232,17 @@ var _util = {
         commentObj['likeCount'] = comment.likeCount;
         return commentObj
     },
-    getFirstCommentChildId: function(url, callback) {
+    getFirstCommentChild: function(url, callback) {
         request(url, function (error, res, body) {
             if (!error && res.statusCode == 200) {
-                var opUserId = JSON.parse(body).payload.opUserId;
-                var firstChild = JSON.parse(body).payload.comments[0].children[0];
+                // Get the first child of the comment so we can use the firstCommentId to extract other children comment
+                var payload = JSON.parse(body).payload;
+                if (!payload || !(payload.comments[0])) {
+                    callback(undefined);
+                    return;
+                }
+                var opUserId = payload.opUserId;
+                var firstChild = payload.comments[0].children[0];
                 callback(_util.processComment(firstChild, opUserId));
             } else {
                 callback(undefined);
@@ -355,11 +363,12 @@ app.get('/comment/:gagId/:commentId', function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
 
-    // If there is no loadMoreId, we need to find the id of the first comment child
+    // If there is no loadMoreId, we need to find the id of the first child of the comment
     // We need to use that id to find the rest of the comment children
+    // Otherwise, use the loadMoreId to load more comments
     if (!req.query.loadMoreId) {
         var url = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=0&level=2&commentId=' + req.params.commentId;
-        _util.getFirstCommentChildId(url, function(firstChildCommentObj) {
+        _util.getFirstCommentChild(url, function(firstChildCommentObj) {
             if (!firstChildCommentObj) {
                 res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
                 return;
@@ -371,7 +380,7 @@ app.get('/comment/:gagId/:commentId', function(req, res) {
                     res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
                     return;
                 }
-                // concatenate firstChildCommentId
+                // concatenate firstChildComment with the rest of the child comments
                 response['comments'] = _.concat(firstChildCommentObj, response['comments']);
                 response['parent'] = req.params.commentId;
                 res.json(response);
