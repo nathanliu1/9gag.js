@@ -5,6 +5,7 @@ var cheerio = require('cheerio');
 var _ = require('lodash');
 
 var app = express();
+var cache = require('express-redis-cache')();
 
 // HTTP status codes, messages and miscellaneous constants
 const SUCCESS = 200;
@@ -163,7 +164,7 @@ var _util = {
 // API STARTS HERE
 
 // GET /gag/:gagId
-app.get('/gag/:gagId', function(req, res) {
+app.get('/gag/:gagId', cache.route({ expire: 60*60*24  }), function(req, res) {
     // Gag id is invalid if the length is not 7
     if (req.params.gagId.length != 7) {
         res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
@@ -182,7 +183,7 @@ app.get('/gag/:gagId', function(req, res) {
     });
 });
 
-app.get('/:section/', function(req, res) {
+app.get('/:section/', cache.route({ expire: 60*60*24  }), function(req, res) {
     // Check if the URL is valid
     if (_util.isSectionValid(req)) {
         var url = 'http://9gag.com/' + req.params.section + '/' + (!req.query.subSection ? '' : req.query.subSection);
@@ -206,7 +207,7 @@ app.get('/:section/', function(req, res) {
     }
 });
 
-app.get('/user/:userId', function(req, res) {
+app.get('/user/:userId', cache.route({ expire: 60*60*24  }), function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId;
     _9gag.getUserOverview(url, req.params.userId, function(response) {
         if (!response) {
@@ -217,7 +218,7 @@ app.get('/user/:userId', function(req, res) {
     })
 });
 
-app.get('/user/:userId/posts', function(req, res) {
+app.get('/user/:userId/posts', cache.route({ expire: 60*60*24  }), function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId + '/posts';
     _9gag.getPosts(url, req.query.loadMoreId, function(response) {
         if (!response) {
@@ -229,7 +230,7 @@ app.get('/user/:userId/posts', function(req, res) {
     })
 });
 
-app.get('/user/:userId/upvotes', function(req, res) {
+app.get('/user/:userId/upvotes', cache.route({ expire: 60*60*24  }), function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId + '/likes';
     _9gag.getPosts(url, req.query.loadMoreId, function(response) {
         if (!response) {
