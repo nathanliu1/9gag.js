@@ -349,7 +349,7 @@ app.get('/user/:userId/upvotes', cache.route({ expire: 60*60*24  }), function(re
  * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
  * @query section - the section of the comments (can be hot or fresh)
  */
-app.get('/comment/:gagId', function(req, res) {
+app.get('/comment/:gagId', cache.route({ expire: 60*60*24  }), function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
     // Comments are sorted by its score by default
@@ -383,7 +383,7 @@ app.get('/comment/:gagId', function(req, res) {
  * @param commentId - the id of the comment
  * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
  */
-app.get('/comment/:gagId/:commentId', function(req, res) {
+app.get('/comment/:gagId/:commentId', cache.route({ expire: 60*60*24  }), function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
 
