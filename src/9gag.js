@@ -11,6 +11,7 @@
 var express = require('express');
 var request = require('request');
 var cheerio = require('cheerio');
+var sha1    = require('sha1');
 var _       = require('lodash');
 
 var app = express();
@@ -23,8 +24,10 @@ const BAD_REQUEST_MESSAGE = 'UNKNOWN REQUEST KEYWORD';
 const NOT_FOUND = 404;
 const NOT_FOUND_MESSAGE = 'RESOURCE NOT FOUND';
 const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga',
-                    'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
-const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh']
+                    'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely'];
+const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh'];
+
+var hashMap = {};
 
 // Core 9GAG API Helper Object
 var _9gag = {
@@ -64,6 +67,7 @@ var _9gag = {
         // If there is a loadMoreId available, change the url
         // Use afterId as a query parameter for user-specific loadMoreId
         // Otherwise, use id as a query parameter for section-specific loadMoreId
+        loadMoreId = _util.getValueInHashmap(loadMoreId);
         if (!!loadMoreId) {
             if (url.indexOf('http://9gag.com/u/') != -1) url += '?afterId=' + loadMoreId;
             else url += '?id=' + loadMoreId;
@@ -91,7 +95,7 @@ var _9gag = {
                 response['data'] = data;
                 // 9gag used last 3 gag to determine loadMoreId
                 if (data.length == 10) {
-                    response['loadMoreId'] = data[9] + '%2C' +  data[8] + '%2C' + data[7];
+                    response['loadMoreId'] = _util.generateHash(data[9] + '%2C' +  data[8] + '%2C' + data[7]);
                 } else {
                     response['loadMoreId'] = '';
                 }
@@ -129,13 +133,15 @@ var _9gag = {
                 var payload = JSON.parse(body).payload;
                 _.each(payload.comments, function(comment, i) {
                     comments.push(_util.processComment(comment, payload.opUserId));
-                    if (i == 9) response['loadMoreId'] = comment.orderKey;
+                    if (i == 9) response['loadMoreId'] = _util.generateHash(comment.orderKey);
                 });
                 response['comments'] = comments;
 
                 // Use refCommentId to load more children of a comment
-                if (payload.hasOwnProperty('refCommentId')) {
-                    response['loadMoreId'] = payload['refCommentId'];
+                if (payload.hasOwnProperty('refCommentId') && comments.length != 0) {
+                    response['loadMoreId'] = _util.generateHash(payload['refCommentId']);
+                } else {
+                    response['loadMoreId'] = '';
                 }
                 callback(response);
             } else {
@@ -227,6 +233,18 @@ var _util = {
                 callback(undefined);
             }
         });
+    },
+    generateHash: function(string) {
+        var hash = sha1(string);
+        hashMap[hash] = string;
+        return sha1(string);
+    },
+    getValueInHashmap: function(hash) {
+        if (hash in hashMap) {
+            return hashMap[hash];
+        } else {
+            return '';
+        }
     }
 };
 
@@ -362,7 +380,7 @@ app.get('/comment/:gagId', function(req, res) {
     //Append loadMoreId
     var url = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=2&order=' + section;
     if (req.query.loadMoreId) {
-        url += '&ref=' + req.query.loadMoreId
+        url += '&ref=' + _util.getValueInHashmap(req.query.loadMoreId);
     }
 
     // A URL that retrieve the comments of a gag post in JSON format
@@ -410,7 +428,7 @@ app.get('/comment/:gagId/:commentId', function(req, res) {
             });
         });
     } else {
-        var commentUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=1&refCommentId=' + req.query.loadMoreId;
+        var commentUrl = 'http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=' + appId + '&url=' + gagUrl + '&count=10&level=1&refCommentId=' + _util.getValueInHashmap(req.query.loadMoreId);
         _9gag.getComments(commentUrl, function(response) {
             if (!response) {
                 res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
