@@ -7,7 +7,6 @@
 //       |___/       |___/ |__/            //
 //Author: @chewong, @JasonFok, @nathanliu1 // 
 /////////////////////////////////////////////
-'use strict';
 var express = require('express');
 var request = require('request');
 var cheerio = require('cheerio');
