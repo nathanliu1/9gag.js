@@ -15,7 +15,15 @@ var sha1    = require('sha1');
 var _       = require('lodash');
 
 var app = express();
-var cache = require('express-redis-cache')();
+
+// Redis Cache Setup
+var cache = require('express-redis-cache')({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+    auth_pass: process.env.REDIS_PASSWORD || ''
+});
+
+console.log(cache);
 
 app.set('port', (process.env.PORT || 3000));
 
