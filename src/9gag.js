@@ -15,6 +15,7 @@ var sha1    = require('sha1');
 var _       = require('lodash');
 
 var app = express();
+var cache = require('express-redis-cache')();
 
 app.set('port', (process.env.PORT || 3000));
 
@@ -259,7 +260,7 @@ var _util = {
  *
  * @param gagId - the id of the gag
  */
-app.get('/gag/:gagId', function(req, res) {
+app.get('/gag/:gagId', cache.route({ expire: 60*60*24  }), function(req, res) {
     // Gag id is invalid if the length is not 7
     if (req.params.gagId.length != 7) {
         res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
@@ -285,7 +286,7 @@ app.get('/gag/:gagId', function(req, res) {
  * @query subSection - the sub-section of the gag
  * @query loadMoreId - an id that allows user to load the next 10 gags from a particular section and sub-section
  */
-app.get('/:section/', function(req, res) {
+app.get('/:section/', cache.route({ expire: 60*60*24  }), function(req, res) {
     // Check if the URL is valid
     if (_util.isSectionValid(req)) {
         var url = 'http://9gag.com/' + req.params.section + '/' + (!req.query.subSection ? '' : req.query.subSection);
@@ -314,7 +315,7 @@ app.get('/:section/', function(req, res) {
  *
  * @param userId - the userId of the user
  */
-app.get('/user/:userId', function(req, res) {
+app.get('/user/:userId', cache.route({ expire: 60*60*24  }), function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId;
     _9gag.getUserOverview(url, req.params.userId, function(response) {
         if (!response) {
@@ -331,7 +332,7 @@ app.get('/user/:userId', function(req, res) {
  * @param userId - the userId of the user
  * @query loadMoreId - an id that allows user to load the next 10 posts that the user posted
  */
-app.get('/user/:userId/posts', function(req, res) {
+app.get('/user/:userId/posts', cache.route({ expire: 60*60*24  }), function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId + '/posts';
     _9gag.getPosts(url, req.query.loadMoreId, function(response) {
         if (!response) {
@@ -349,7 +350,7 @@ app.get('/user/:userId/posts', function(req, res) {
  * @param userId - the userId of the user
  * @query loadMoreId - an id that allows user to load the next 10 gags that the user upvoted
  */
-app.get('/user/:userId/upvotes', function(req, res) {
+app.get('/user/:userId/upvotes', cache.route({ expire: 60*60*24  }), function(req, res) {
     var url = 'http://9gag.com/u/' + req.params.userId + '/likes';
     _9gag.getPosts(url, req.query.loadMoreId, function(response) {
         if (!response) {
@@ -368,7 +369,7 @@ app.get('/user/:userId/upvotes', function(req, res) {
  * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
  * @query section - the section of the comments (can be hot or fresh)
  */
-app.get('/comment/:gagId', function(req, res) {
+app.get('/comment/:gagId', cache.route({ expire: 60*60*24  }), function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
     // Comments are sorted by its score by default
@@ -402,7 +403,7 @@ app.get('/comment/:gagId', function(req, res) {
  * @param commentId - the id of the comment
  * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
  */
-app.get('/comment/:gagId/:commentId', function(req, res) {
+app.get('/comment/:gagId/:commentId', cache.route({ expire: 60*60*24  }), function(req, res) {
     var appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
     var gagUrl = encodeURIComponent('http://9gag.com/gag/' + req.params.gagId);
 
