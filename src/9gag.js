@@ -16,6 +16,8 @@ var _       = require('lodash');
 
 var app = express();
 
+app.set('port', (process.env.PORT || 3000));
+
 // HTTP status codes, messages and miscellaneous constants
 const SUCCESS = 200;
 const SUCCESS_MESSAGE = 'OK';
@@ -447,4 +449,6 @@ app.get('*', function(req, res) {
     res.json({'status': BAD_REQUEST, 'message': BAD_REQUEST_MESSAGE});
 });
 
-app.listen(3000);
+app.listen(app.get('port'), function() {
+  console.log('9gag API server started on port',  app.get('port'));
+});
