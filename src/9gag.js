@@ -452,3 +452,6 @@ app.get('*', function(req, res) {
 app.listen(app.get('port'), function() {
   console.log('9gag API server started on port',  app.get('port'));
 });
+
+// Export app for testing purposes
+module.exports = app;
