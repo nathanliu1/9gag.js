@@ -53,12 +53,15 @@
        url('../fonts/Noto-Sans-700italic/Noto-Sans-700italic.ttf') format('truetype'),
        url('../fonts/Noto-Sans-700italic/Noto-Sans-700italic.svg#NotoSans') format('svg');
 }
+html {
+  background-color: #f1f1f1;
+}
 
 body {
-  background-color: #fff;
+  background-color: #f1f1f1;
   padding:50px;
   font: 14px/1.5 "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color:#727272;
+  color:#555;
   font-weight:400;
 }
 
@@ -321,4 +324,8 @@ footer {
     font-size:12pt;
     color:#444;
   }
+}
+
+img {
+  margin-bottom: 10px;
 }
