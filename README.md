@@ -1,13 +1,21 @@
-# 9gag.js - Unofficial API for 9gag.com
-##Installation Guideline
-Pre-requisites: Node.js
+# 9gag.js
+![Heroku](https://heroku-badge.herokuapp.com/?app=ninegagjs) ![codeship](https://codeship.com/projects/56e34800-74c1-0134-082d-12948b47b8fd/status?branch=master)
+
+9gag.js is an Node.js-based API for 9gag.com. Available in **RESTful web service** and **npm module**, it enables third-party applications to access various data from 9gag.com. Unofficially.
+##Usage
 ```shell
 $ cd 9gag.js
 $ npm install
-$ cd src
-$ node 9gag.js
+$ npm start
 ```
-For developing and debugging, use ```nodemon 9gag.js``` instead of ```node 9gag.js```. ```nodemon``` is a useful tool that automatically restart the server when it detects changes in ```9gag.js``` 
+For developing and debugging purposes, run 
+```shell
+$ npm run dev
+```
+For testing, run
+```
+$ npm test
+```
 
 ##Contribution Guideline
 1. Use **spaces** instead of **tabs** for indention
