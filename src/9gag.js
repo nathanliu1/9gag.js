@@ -23,8 +23,6 @@ var cache = require('express-redis-cache')({
     auth_pass: process.env.REDIS_PASSWORD || ''
 });
 
-console.log(cache);
-
 app.set('port', (process.env.PORT || 3000));
 
 // HTTP status codes, messages and miscellaneous constants
