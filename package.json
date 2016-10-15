@@ -4,6 +4,8 @@
   "description": "9GAG API",
   "main": "src/9gag.js",
   "scripts": {
+    "start": "node src/9gag.js",
+    "dev": "nodemon src/9gag.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
