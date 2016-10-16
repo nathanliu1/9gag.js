@@ -11,9 +11,14 @@ var express = require('express');
 var request = require('request');
 var cheerio = require('cheerio');
 var sha1    = require('sha1');
+var path    = require("path");
 var _       = require('lodash');
 
 var app = express();
+
+// Load static files
+app.use('/css', express.static(path.join(__dirname, '../public/css')));
+app.use('/js', express.static(path.join(__dirname, '../public/js')));
 
 // Redis Cache Setup
 var cache = require('express-redis-cache')({
@@ -447,6 +452,10 @@ app.get('/comment/:gagId/:commentId', cache.route({ expire: 60*60*24  }), functi
             res.json(response);
         });
     }
+});
+
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 /**
