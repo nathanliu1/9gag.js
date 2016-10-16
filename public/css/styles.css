@@ -372,3 +372,19 @@ code {
   display: inline-block;
   width: 375px;
 }
+
+.blue {
+  color: #66D9EF;
+}
+
+.pink {
+  color: #F92672;
+}
+
+.yellow {
+  color: #E6DB74;
+}
+
+.grey {
+  color: #75715E;
+}
