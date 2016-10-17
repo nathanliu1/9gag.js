@@ -155,6 +155,7 @@ Get the gags posted by the gag
 Key      | Required? |Value Type      | Default | Description
 --------- | ------ |--------- | ------- | -----------
 userId    |✓ | String    | N/A     | The user id of the user
+loadMoreId       | | String     | N/A | The id that the user need to navigate to the next 10 gags
 
 ####Response
 Key      | Value Type      |  Description | Note
