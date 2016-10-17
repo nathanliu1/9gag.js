@@ -1,35 +1,11 @@
 # 9gag.js
-![Heroku](https://heroku-badge.herokuapp.com/?app=ninegagjs) ![codeship](https://codeship.com/projects/56e34800-74c1-0134-082d-12948b47b8fd/status?branch=master)
-
-9gag.js is an Node.js-based API for 9gag.com. Available in **RESTful web service** and **npm module**, it enables third-party applications to access various data from 9gag.com. Unofficially.
-##Usage
-```shell
-$ cd 9gag.js
-$ npm install
-$ npm start
-```
-For developing and debugging purposes, run 
-```shell
-$ npm run dev
-```
-For testing, run
-```
-$ npm test
-```
-
-##Contribution Guideline
-1. Use **spaces** instead of **tabs** for indention
-2. Use `'` instead of `"` for strings
-3. Do not directly commit to `master`, checkout a seperate branch and make a pull request if necessary
-4. Be modular! (Create seperate methods in ```_util``` object instead of craming everything into one method)
-5. Please reference the GitHub issue as you make a PR
-6. Please comment!
+9gag.js is an Node.js-based API for 9gag.com. Available in both API server and npm module, it enables third-party applications to access various data from 9gag. Unofficially.
 
 ##Documentation
 Method | Endpoint
 -------|---------
-GET    | [/gag/{gagId}](#get-gaggagid)
-GET    | [/{section}?subSection={subSection}&loadMoreId={loadMoreId}](#get-sectionsubsectionsubsectionloadmoreidloadmoreid)
+GET    | [/gag/:gagId](#get-gaggagid)
+GET    | [/:section?subSection=:subSection&loadMoreId=:loadMoreId](#get-sectionsubsectionsubsectionloadmoreidloadmoreid)
 
 Object Model          |
 --------------------- |
@@ -38,7 +14,7 @@ Object Model          |
 [Media](#media)       | 
 [Share](#share)       |
 
-### GET /gag/{gagId}
+### GET /gag/:gagId
 Get data for a specific gag.
 
 ####Parameters
@@ -86,7 +62,7 @@ Response
 }
 ```
 
-### GET /{section}?subSection={subSection}&loadMoreId={loadMoreId}
+### GET /:section?subSection=:subSection&loadMoreId=:loadMoreId
 Get 10 gags from a particular section and sub-section. Since 9GAG is an infinite scrolling website, gags will never stop displaying. Use loadMoreId to find the next 10 gags.
 
 Currently availabe sections: 
@@ -107,7 +83,7 @@ Key      | Value Type      |  Description | Note
 --------- | --------- | ------- | -----------
 status     | Number    | HTTP status code
 message     | String    |  Message of the status code
-data     | Array | An array of gag id
+data     | Array | An array of gag id in the particular section/sub-section
 section | String | The section of the gag
 subSection | String | The sub-section of the gag
 
@@ -122,25 +98,77 @@ Response
   "status": 200,
   "message": "OK",
   "data": [
-    "aYL5B2x",
-    "aK35y63",
-    "a4jy84d",
-    "ajDwGrG",
-    "aAP5NWL",
-    "adXw4RZ",
-    "aDG5Pyx",
-    "agGwdmn",
-    "a84Onv6",
-    "a7dXG1x"
+    "aAPnow9",
+    "a1X49m2",
+    "adX3EpZ",
+    "aDGBy3w",
+    "a6QW0Vm",
+    "aXw86m2",
+    "ajD24Lp",
+    "a84rgqZ",
+    "a4jMyew",
+    "awVq29x"
   ],
-  "loadMoreId": "a7dXG1x%2Ca84Onv6%2CagGwdmn",
+  "loadMoreId": "284462104345419892549df177d9fb07859625f6",
   "section": "wtf",
   "subSection": "hot"
 }
 ```
+
+### GET /user/:userId
+Get the overview of a user
+
+####Parameters
+Key      | Required? |Value Type      | Default | Description
+--------- | ------ |--------- | ------- | -----------
+userId    |✓ | String    | N/A     | The user id of the user
+
+####Response
+Key      | Value Type      |  Description | Note
+--------- | --------- | ------- | -----------
+status     | Number    | HTTP status code
+message     | String    |  Message of the status code
+userId     | String | The user id of the user
+profileImage | String | The URL of the user's profile image
+url | String | The URL of the user profile
+
+####Example
 REST Call
 ```
-localhost:3000/wtf?loadMoreId=a7dXG1x%2Ca84Onv6%2CagGwdmn
+localhost:3000/user/lovinghist
+```
+Response
+```json
+{
+  "status": 200,
+  "message": "OK",
+  "userId": "lovinghist",
+  "profileImage": "http://accounts-cdn.9gag.com/media/avatar/1668205_100_1.jpg",
+  "url": "http://9gag.com/u/lovinghist"
+}
+```
+
+### GET /user/:userId/posts?loadMoreId=:loadMoreId
+Get the gags posted by the gag
+
+####Parameters
+Key      | Required? |Value Type      | Default | Description
+--------- | ------ |--------- | ------- | -----------
+userId    |✓ | String    | N/A     | The user id of the user
+
+####Response
+Key      | Value Type      |  Description | Note
+--------- | --------- | ------- | -----------
+status     | Number    | HTTP status code
+message     | String    |  Message of the status code
+data     | Array | An array of gag id that the user posts
+loadMoreId | String | The id that the user need to navigate to the next 10 gags
+userId | String | The user id of the user
+
+####Example
+REST Call
+```
+localhost:3000/user/_s4tan_/posts
 ```
 Response
 ```json
@@ -148,22 +176,25 @@ Response
   "status": 200,
   "message": "OK",
   "data": [
-    "a5r3xQE",
-    "apLw845",
-    "a9Y0Dp6",
-    "aGD57D6",
-    "arNw85B",
-    "adXwoZ2",
-    "adXwo49",
-    "a4jy59p",
-    "aPW2oDG",
-    "azAwdoZ"
+    "aQxwBWK",
+    "aM9RYQW",
+    "aAPo65Z",
+    "aB1A6MD",
+    "aEn90Pn",
+    "aDGKwV9",
+    "a84gKXQ",
+    "amzZp5d",
+    "azA3A2m",
+    "aWMXBvd"
   ],
-  "loadMoreId": "azAwdoZ%2CaPW2oDG%2Ca4jy59p",
-  "section": "wtf",
-  "subSection": "hot"
+  "loadMoreId": "da94091aa3def7366f7aea3bae18cfd8525b1a34",
+  "userId": "_s4tan_"
 }
 ```
+
+### GET /user/:userId/upvotes?loadMoreId=:loadMoreId
+### GET /comment/:gagId?loadMoreId=:loadMoreId
+### GET /comment/:gagId/:commentId?loadMoreId=:loadMoreId
 
 ###Gag
 A gag object contains information about the gag.
@@ -212,6 +243,13 @@ twitter     | String    | A share link for Twitter
 googlePlus     | String    | A share link for Google+
 pinterest     | String    | A share link for Pinterest
 
-##Contribution
-https://github.com/k3min/infinigag
+
+##Contribution Guideline
+1. Use **spaces** instead of **tabs** for indention
+2. Use `'` instead of `"` for strings
+3. Do not directly commit to `master`, checkout a seperate branch and make a pull request if necessary
+4. Be modular! (Create seperate methods in ```_util``` object instead of craming everything into one method)
+5. Please reference the GitHub issue as you make a PR
+6. Please comment!
+
 
