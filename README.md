@@ -194,7 +194,182 @@ Response
 ```
 
 ### GET /user/:userId/upvotes?loadMoreId=:loadMoreId
+
+####Parameters
+Key      | Required? |Value Type      | Default | Description
+--------- | ------ |--------- | ------- | -----------
+userId    |✓ | String    | N/A     | The user id of the user
+loadMoreId       | | String     | N/A | The id that the user need to navigate to the next 10 gags
+
+####Response
+Key      | Value Type      |  Description | Note
+--------- | --------- | ------- | -----------
+status     | Number    | HTTP status code
+message     | String    |  Message of the status code
+data     | Array | An array of gag id that the user upvotes
+loadMoreId | String | The id that the user need to navigate to the next 10 gags
+userId | String | The user id of the user
+
+####Example
+REST Call
+```
+localhost:3000/user/_s4tan_/upvotes
+```
+Response
+```json
+{
+  "status": 200,
+  "message": "OK",
+  "data": [
+    "aQxwBWK",
+    "aOvgAdR",
+    "ay8gDNX",
+    "a1XzXRP",
+    "aM9RYQW",
+    "aAPo65Z",
+    "aB1A6MD",
+    "aEn90Pn",
+    "a7dYb5L",
+    "aWMr0oq"
+  ],
+  "loadMoreId": "a0af81961e4d174282d038bcee2fb5d890e70042",
+  "userId": "_s4tan_"
+}
+```
+
 ### GET /comment/:gagId?loadMoreId=:loadMoreId
+
+####Parameters
+Key      | Required? |Value Type      | Default | Description
+--------- | ------ |--------- | ------- | -----------
+gagId    |✓ | String    | N/A     | ID of the gag
+loadMoreId       | | String     | N/A | The id that the user need to navigate to the next 10 gags
+
+####Response
+Key      | Value Type      |  Description | Note
+--------- | --------- | ------- | -----------
+status     | Number    | HTTP status code
+message     | String    |  Message of the status code
+loadMoreId     | String | An array of gag id that the user upvotes
+comments | Array | An array of [Comment](#comment) object
+
+####Example
+REST Call
+```
+localhost:3000/comment/a6QW77b
+```
+
+Response
+```json
+{
+  "status": 200,
+  "message": "OK",
+  "loadMoreId": "d155be8f52735a44283d10e4cd6a692f2d6b22b8",
+  "comments": [
+    {
+      "commentId": "c_147661498453336211",
+      "userId": "mceldafis",
+      "text": "What beer are you drinking that you do this After 5 beer",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 24,
+      "timestamp": 1476614984,
+      "likeCount": 119
+    },
+    {
+      "commentId": "c_147661349528888236",
+      "userId": "salt4breakfast",
+      "text": "Release the kraken",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 1,
+      "timestamp": 1476613495,
+      "likeCount": 25
+    },
+    {
+      "commentId": "c_147667310840322068",
+      "userId": "asain_dude",
+      "text": "I wish he could ride on me like that ;)",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 2,
+      "timestamp": 1476673108,
+      "likeCount": 9
+    },
+    {
+      "commentId": "c_147661524197753012",
+      "userId": "byczpliz",
+      "text": "Im sorry for your weak head :D",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476615241,
+      "likeCount": 9
+    },
+    {
+      "commentId": "c_147661373737021977",
+      "userId": "alveenajanjua",
+      "text": "Hahaha not a bad one though",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476613737,
+      "likeCount": 6
+    },
+    {
+      "commentId": "c_147668017667556176",
+      "userId": "cesardedios94",
+      "text": "Weak!!",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476680176,
+      "likeCount": 4
+    },
+    {
+      "commentId": "c_147667363212451239",
+      "userId": "psychoticcunt",
+      "text": "this is the cutest thing i&#039;ve seen today!",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476673632,
+      "likeCount": 3
+    },
+    {
+      "commentId": "c_147667292986437530",
+      "userId": "jdmzibby",
+      "text": "They shouldn&#039;t be drinking at that age especially around uncle Ronnie",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476672929,
+      "likeCount": 3
+    },
+    {
+      "commentId": "c_147667324824303328",
+      "userId": "21yohipster",
+      "text": "after 5 lemonades",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476673248,
+      "likeCount": 2
+    },
+    {
+      "commentId": "c_147667297282053391",
+      "userId": "randomredpanda",
+      "text": What are you doing with your life?",
+      "isOp": false,
+      "isChild": false,
+      "childrenCount": 0,
+      "timestamp": 1476672972,
+      "likeCount": 2
+    }
+  ]
+}
+```
+
 ### GET /comment/:gagId/:commentId?loadMoreId=:loadMoreId
 
 ###Gag
@@ -230,8 +405,8 @@ An media object contains the animation of a gag
 ####Properties
 Key | Value Type     | Description
 --------- | --------- | ------- 
-mp4     | string    | The animation of the gag, in .mp4
-webm     | string    | The animation of the gag, in .webm
+mp4     | String    | The animation of the gag, in .mp4
+webm     | String    | The animation of the gag, in .webm
 
 ###Share
 A Share object contains various URL which enable users to share the gag
@@ -243,6 +418,21 @@ facebook     | String    | A share link for Facebook
 twitter     | String    | A share link for Twitter
 googlePlus     | String    | A share link for Google+
 pinterest     | String    | A share link for Pinterest
+
+###Comment
+A Comment object contains information about a comment
+
+####Properties
+Key | Value Type     | Description
+--------- | --------- | ------- 
+commentId     | String    | The ID of the comment
+userId     | String    | The ID of the user who commented
+text     | String    | The text of the comment
+isOp     | Boolean    | True if the user is OP of the gag. Otherwises, false.
+isChild     | Boolean    | True if the comment is a child comment. Otherwises, false.
+childrenCount     | Number    | The number of children the comment has
+timestamp     | Number    | The time when the comment was made
+likeCount     | Number    | The number of likes the comment has
 
 
 ##Contribution Guideline
