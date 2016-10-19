@@ -152,9 +152,9 @@ var _9gag = {
                 response['comments'] = comments;
 
                 // Use refCommentId to load more children of a comment
-                if (payload.hasOwnProperty('refCommentId') && comments.length != 0) {
+                if (!('loadMoreId' in response) && payload.hasOwnProperty('refCommentId') && comments.length != 0) {
                     response['loadMoreId'] = _util.generateHash(payload['refCommentId']);
-                } else {
+                } else if (!('loadMoreId' in response)){
                     response['loadMoreId'] = '';
                 }
                 callback(response);
