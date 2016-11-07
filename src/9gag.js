@@ -7,42 +7,41 @@
 //       |___/       |___/ |__/            //
 //Author: @chewong, @JasonFok, @nathanliu1 // 
 /////////////////////////////////////////////
-import express from 'express'
+import express from 'express';
+import request from 'request';
+import cheerio from 'cheerio';
+import sha1 from 'sha1';
+import path from "path";
+import _ from 'lodash';
 
-import request from 'request'
-import cheerio from 'cheerio'
-import sha1 from 'sha1'
-import path from "path"
-import _ from 'lodash'
-
-const app = express()
+const app = express();
 
 // Load static files
-app.use('/css', express.static(path.join(__dirname, '../public/css')))
-app.use('/js', express.static(path.join(__dirname, '../public/js')))
+app.use('/css', express.static(path.join(__dirname, '../public/css')));
+app.use('/js', express.static(path.join(__dirname, '../public/js')));
 
 // Redis Cache Setup
 const cache = require('express-redis-cache')({
   host: process.env.REDIS_HOST || 'localhost',
   port: process.env.REDIS_PORT || 6379,
   auth_pass: process.env.REDIS_PASSWORD || ''
-})
+});
 
 // Set up server port
-app.set('port', (process.env.PORT || 3000))
+app.set('port', (process.env.PORT || 3000));
 
 // HTTP status codes, messages and miscellaneous constants
-const SUCCESS = 200
-const SUCCESS_MESSAGE = 'OK'
-const BAD_REQUEST = 400
-const BAD_REQUEST_MESSAGE = 'UNKNOWN REQUEST KEYWORD'
-const NOT_FOUND = 404
-const NOT_FOUND_MESSAGE = 'RESOURCE NOT FOUND'
+const SUCCESS = 200;
+const SUCCESS_MESSAGE = 'OK';
+const BAD_REQUEST = 400;
+const BAD_REQUEST_MESSAGE = 'UNKNOWN REQUEST KEYWORD';
+const NOT_FOUND = 404;
+const NOT_FOUND_MESSAGE = 'RESOURCE NOT FOUND';
 const SECTION_LIST = ['hot', 'trending', 'fresh', 'funny', 'wtf', 'gif', 'nsfw', 'gaming', 'anime-manga',
-          'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely']
-const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh']
+          'movie-tv', 'cute', 'girl', 'awesome', 'cosplay', 'sport', 'food', 'ask9gag', 'timely'];
+const SPECIAL_SECTION_LIST = ['hot', 'trending', 'fresh'];
 
-const hashMap = {}
+const hashMap = {};
 
 // Core 9GAG API Helper Object
 const _9gag = {
@@ -78,7 +77,7 @@ const _9gag = {
       }
     })
   },
-  getPosts(url, loadMoreId, callback) {
+  getPosts(url, loadMoreId) {
     // If there is a loadMoreId available, change the url
     // Use afterId as a query parameter for user-specific loadMoreId
     // Otherwise, use id as a query parameter for section-specific loadMoreId
@@ -120,23 +119,18 @@ const _9gag = {
       }
     })
   },
-  getUserOverview(url, userId, callback) {
-    request(url, (error, res, body) => {
-      if (!error && res.statusCode == 200) {
-        const $ = cheerio.load(body)
+  async getUserOverview(url, userId) {
+    const body = await _util.getBodyFromUrl(url);
+    const $ = cheerio.load(body);
 
-        // Construct a response
-        const response = {}
-        response['status'] = SUCCESS
-        response['message'] = SUCCESS_MESSAGE
-        response['userId'] = userId
-        response['profileImage'] = $('.profile-header .avatar-container img').attr('src')
-        response['url'] = url
-        callback(response)
-      } else {
-        callback(undefined)
-      }
-    })
+    // Construct a response
+    const response = {};
+    response['status'] = SUCCESS;
+    response['message'] = SUCCESS_MESSAGE;
+    response['userId'] = userId;
+    response['profileImage'] = $('.profile-header .avatar-container img').attr('src');
+    response['url'] = url;
+    return response;
   },
   getComments(url, callback) {
     request(url, (error, res, body) => {
@@ -164,7 +158,7 @@ const _9gag = {
       }
     })
   }
-}
+};
 
 // Utility Object
 var _util = {
@@ -260,6 +254,17 @@ var _util = {
     } else {
       return ''
     }
+  },
+  getBodyFromUrl(url) {
+    return new Promise((resolve, reject) => {
+      request(url, (err, res, body) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(body);
+      });
+    });
   }
 }
 
@@ -327,15 +332,10 @@ app.get('/:section/', cache.route({ expire: 60*60*24  }), (req, res) => {
  *
  * @param userId - the userId of the user
  */
-app.get('/user/:userId', cache.route({ expire: 60*60*24  }), (req, res) => {
+app.get('/user/:userId', async (req, res) => {
   const url = `http://9gag.com/u/${req.params.userId}`
-  _9gag.getUserOverview(url, req.params.userId, response => {
-    if (!response) {
-      res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-      return
-    }
-    res.json(response)
-  })
+  let response = await _9gag.getUserOverview(url, req.params.userId)
+  res.json(response)
 })
 
 /**
