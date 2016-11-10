@@ -10,9 +10,9 @@
 import express from 'express';
 import request from 'request';
 import cheerio from 'cheerio';
-import sha1 from 'sha1';
-import path from "path";
-import _ from 'lodash';
+import sha1    from 'sha1';
+import path    from "path";
+import _       from 'lodash';
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.use('/js', express.static(path.join(__dirname, '../public/js')));
 const cache = require('express-redis-cache')({
   host: process.env.REDIS_HOST || 'localhost',
   port: process.env.REDIS_PORT || 6379,
-  auth_pass: process.env.REDIS_PASSWORD || ''
+  auth_pass: process.env.REDIS_PASSWORD || '',
 });
 
 // Set up server port
@@ -45,79 +45,68 @@ const hashMap = {};
 
 // Core 9GAG API Helper Object
 const _9gag = {
-  getPost(url, gagId, callback) {
-    // Get data for the gag site
-    request(url, (error, res, body) => {
-      if (!error && res.statusCode == 200) {
-        const $ = cheerio.load(body)
+  async getPost(url, gagId) {
+    const body = await _util.getBodyFromUrl(url);
+    const $ = cheerio.load(body);
 
-        // Construct a response
-        const response = {}
-        response['status'] = SUCCESS
-        response['message'] = SUCCESS_MESSAGE
-        const gag = {}
-        gag['id'] = gagId
-        gag['title'] = $('.badge-item-title').html()
-        gag['images'] = _util.generateImagesUrl(gagId)
-        gag['next'] = $('.badge-next-post-entry').attr('href').substring(5, 12)
-        // Check if the gag is a gif
-        if ($('.badge-animated-cover').length > 0) {
-          gag['media'] = _util.generateMediaUrl(gagId)
-        }
-        gag['url'] = `http://9gag.com/gag/${gagId}`
-        gag['votes'] = parseInt($('.badge-item-love-count').html().replace(',', ''))
-        gag['comments'] = parseInt($('.badge-item-comment-count').html().replace(',', ''))
-        gag['share'] = _util.generateShareUrl(gagId, gag['title'])
-        response['gag'] = gag
-        // Callback
-        callback(response)
-      } else {
-        // If we fail to request from gag site
-        callback(undefined)
-      }
-    })
+    // Construct a response
+    const response = {};
+    response.status = SUCCESS;
+    response.message = SUCCESS_MESSAGE;
+    const gag = {};
+    gag.id = gagId;
+    gag.title = $('.badge-item-title').html();
+    gag.images = _util.generateImagesUrl(gagId);
+    gag.next = $('.badge-next-post-entry').attr('href').substring(5, 12);
+    // Check if the gag is a gif
+    if ($('.badge-animated-cover').length > 0) {
+      gag.media = _util.generateMediaUrl(gagId);
+    }
+    gag.url = `http://9gag.com/gag/${gagId}`
+    gag.votes = parseInt($('.badge-item-love-count').html().replace(',', ''));
+    gag.comments = parseInt($('.badge-item-comment-count').html().replace(',', ''));
+    gag.share = _util.generateShareUrl(gagId, gag.title);
+    response.gag = gag;
+
+    return response;
   },
-  getPosts(url, loadMoreId) {
+  async getPosts(url, loadMoreId) {
     // If there is a loadMoreId available, change the url
     // Use afterId as a query parameter for user-specific loadMoreId
     // Otherwise, use id as a query parameter for section-specific loadMoreId
-    loadMoreId = _util.getValueInHashmap(loadMoreId)
+    loadMoreId = _util.getValueInHashmap(loadMoreId);
     if (!!loadMoreId) {
-      if (url.includes('http://9gag.com/u/')) url += `?afterId=${loadMoreId}`
-      else url += `?id=${loadMoreId}`
+      if (url.includes('http://9gag.com/u/')) url += `?afterId=${loadMoreId}`;
+      else url += `?id=${loadMoreId}`;
     }
 
-    request(url, (error, res, body) => {
-      if (!error && res.statusCode == 200) {
-        const $ = cheerio.load(body)
+    const body = await _util.getBodyFromUrl(url);
+    const $ = cheerio.load(body);
 
-        // Construct a response
-        const response = {}
-        response['status'] = SUCCESS
-        response['message'] = SUCCESS_MESSAGE
+    // Construct a response
+    const response = {};
+    response.status = SUCCESS;
+    response.message = SUCCESS_MESSAGE;
 
-        // Go throught each gag on the page to get each gag id
-        const data = []
-        _.each($('.badge-item-title'), (gag, i) => {
-          // Make sure number of extracted gags does not exceed the limit that the user desires
-          if (i < 10) {
-            // Get gag id from href attribute and minor string clean up
-            const gagId = cheerio.load(gag)('a').attr('href').replace('/gag/', '')
-            data.push(gagId.substring(0, 7))
-          }
-        })
-        response['data'] = data
-        // 9gag used last 3 gag to determine loadMoreId
-        if (data.length == 10) {
-          response['loadMoreId'] = _util.generateHash(`${data[9]}%2C${data[8]}%2C${data[7]}`)
-        } else {
-          response['loadMoreId'] = ''
-        }
-        callback(response)
-      } else {
-        callback(undefined)
+    // Go throught each gag on the page to get each gag id
+    const data = [];
+    _.each($('.badge-item-title'), (gag, i) => {
+      // Make sure number of extracted gags does not exceed the limit that the user desires
+      if (i < 10) {
+        // Get gag id from href attribute and minor string clean up
+        const gagId = cheerio.load(gag)('a').attr('href').replace('/gag/', '');
+        data.push(gagId.substring(0, 7));
       }
     })
+    response.data = data;
+    // 9gag used last 3 gag to determine loadMoreId
+    if (data.length == 10) {
+      response.loadMoreId = _util.generateHash(`${data[9]}%2C${data[8]}%2C${data[7]}`);
+    } else {
+      response.loadMoreId = '';
+    }
+
+    return response;
   },
   async getUserOverview(url, userId) {
     const body = await _util.getBodyFromUrl(url);
@@ -125,61 +114,56 @@ const _9gag = {
 
     // Construct a response
     const response = {};
-    response['status'] = SUCCESS;
-    response['message'] = SUCCESS_MESSAGE;
-    response['userId'] = userId;
-    response['profileImage'] = $('.profile-header .avatar-container img').attr('src');
-    response['url'] = url;
+    response.status = SUCCESS;
+    response.message = SUCCESS_MESSAGE;
+    response.userId = userId;
+    response.profileImage = $('.profile-header .avatar-container img').attr('src');
+    response.url = url;
     return response;
   },
-  getComments(url, callback) {
-    request(url, (error, res, body) => {
-      if (!error && res.statusCode == 200) {
-        const response = {}
-        response['status'] = SUCCESS
-        response['message'] = SUCCESS_MESSAGE
-        const comments = []
-        const payload = JSON.parse(body).payload
-        _.each(payload.comments, (comment, i) => {
-          comments.push(_util.processComment(comment, payload.opUserId))
-          if (i == 9) response['loadMoreId'] = _util.generateHash(comment.orderKey)
-        })
-        response['comments'] = comments
-
-        // Use refCommentId to load more children of a comment
-        if (!('loadMoreId' in response) && payload.hasOwnProperty('refCommentId') && comments.length != 0) {
-          response['loadMoreId'] = _util.generateHash(payload['refCommentId'])
-        } else if (!('loadMoreId' in response)){
-          response['loadMoreId'] = ''
-        }
-        callback(response)
-      } else {
-        callback(undefined)
-      }
+  async getComments(url) {
+    const body = await _util.getBodyFromUrl(url);
+    const response = {};
+    response.status = SUCCESS;
+    response.message = SUCCESS_MESSAGE;
+    const comments = [];
+    const payload = JSON.parse(body).payload;
+    _.each(payload.comments, (comment, i) => {
+      comments.push(_util.processComment(comment, payload.opUserId));
+      if (i == 9) response.loadMoreId = _util.generateHash(comment.orderKey);
     })
-  }
+    response.comments = comments;
+
+    // Use refCommentId to load more children of a comment
+    if (!('loadMoreId' in response) && payload.hasOwnProperty('refCommentId') && comments.length != 0) {
+      response.loadMoreId = _util.generateHash(payload.refCommentId);
+    } else if (!('loadMoreId' in response)) {
+      response.loadMoreId = '';
+    }
+    return response;
+  },
 };
 
 // Utility Object
-var _util = {
+const _util = {
   baseContentUrl: 'http://img-9gag-fun.9cache.com/photo/',
   generateImagesUrl(gagId) {
     const imagesUrl = {}
-    imagesUrl['small'] = `${this.baseContentUrl + gagId}_220x145.jpg`
-    imagesUrl['cover'] = `${this.baseContentUrl + gagId}_460c.jpg`
-    imagesUrl['normal'] = `${this.baseContentUrl + gagId}_460s.jpg`
-    imagesUrl['large'] = `${this.baseContentUrl + gagId}_700b.jpg`
+    imagesUrl.small = `${this.baseContentUrl + gagId}_220x145.jpg`
+    imagesUrl.cover = `${this.baseContentUrl + gagId}_460c.jpg`
+    imagesUrl.normal = `${this.baseContentUrl + gagId}_460s.jpg`
+    imagesUrl.large = `${this.baseContentUrl + gagId}_700b.jpg`
     return imagesUrl
   },
   generateMediaUrl(gagId) {
     const mediaUrl = {}
-    mediaUrl['mp4'] = `${this.baseContentUrl + gagId}_460sv.mp4`
-    mediaUrl['webm'] = `${this.baseContentUrl + gagId}_460svwm.webm`
+    mediaUrl.mp4 = `${this.baseContentUrl + gagId}_460sv.mp4`
+    mediaUrl.webm = `${this.baseContentUrl + gagId}_460svwm.webm`
     return mediaUrl
   },
   isSectionValid(req) {
     // 1. Check if the requested section is a valid section
-    // 2. Check if the requested section is in SPECIAL_SECTION_LIST ['hot', 'trending', 'fresh'].
+    // 2. Check if the requested section is in SPECIAL_SECTION_LIST .hot', 'trending', 'fresh.
     //    if it is, make sure the user did not provide a subSection
     // 3. Make sure subSection is only 'hot' or 'fresh'. If the user did not provide a subSection, it will be 'hot' by default
     if (!_.includes(SECTION_LIST, req.params.section)) {
@@ -192,7 +176,7 @@ var _util = {
       }
     }
     // Checking if there is extra parameters, since we do not want extra parameters
-    return !req.params['0']
+    return !_.first(req.params);
   }, 
   generateShareUrl(gagId, title) {
     const shareUrl = {}
@@ -200,59 +184,53 @@ var _util = {
     const twitterBaseUrl = 'https://twitter.com/intent/tweet?via=9GAG&source=tweetbutton&original_referer=http://9gag.com/gag/'
     const googlePlusBaseUrl = 'https://plus.google.com/share?url=http://9gag.com/gag/'
     const pinterestBaseUrl = 'https://www.pinterest.com/pin/create/button/?url=http://9gag.com/gag/'
-    shareUrl['facebook'] = `${facebookBaseUrl + gagId}?ref=fb.s`
-    shareUrl['twitter'] = `${twitterBaseUrl + gagId}?ref=t&text=${encodeURIComponent(title)}!&url=http://9gag.com/gag/${gagId}?ref=t`
-    shareUrl['googlePlus'] = `${googlePlusBaseUrl + gagId}?ref=gp`
-    shareUrl['pinterest'] = `${pinterestBaseUrl + gagId}?ref=pn&media=http://img-9gag-fun.9cache.com/photo/${gagId}_700b.jpg&description=${encodeURIComponent(title)}`
+    shareUrl.facebook = `${facebookBaseUrl + gagId}?ref=fb.s`
+    shareUrl.twitter = `${twitterBaseUrl + gagId}?ref=t&text=${encodeURIComponent(title)}!&url=http://9gag.com/gag/${gagId}?ref=t`
+    shareUrl.googlePlus = `${googlePlusBaseUrl + gagId}?ref=gp`
+    shareUrl.pinterest = `${pinterestBaseUrl + gagId}?ref=pn&media=http://img-9gag-fun.9cache.com/photo/${gagId}_700b.jpg&description=${encodeURIComponent(title)}`
     return shareUrl
   },
   processComment(comment, opUserId) {
     const commentObj = {}
-    commentObj['commentId'] = comment.commentId
-    commentObj['userId'] = comment.user.displayName
-    commentObj['text'] = unescape(comment.text)
+    commentObj.commentId = comment.commentId
+    commentObj.userId = comment.user.displayName
+    commentObj.text = unescape(comment.text)
     if (comment.userId == opUserId) {
-      commentObj['isOp'] = true
+      commentObj.isOp = true
     } else {
-      commentObj['isOp'] = false
+      commentObj.isOp = false
     }
     if (comment.level == 1) {
-      commentObj['isChild'] = false
-      commentObj['childrenCount'] = comment.childrenTotal
+      commentObj.isChild = false
+      commentObj.childrenCount = comment.childrenTotal
     } else {
-      commentObj['isChild'] = true
+      commentObj.isChild = true
     }
-    commentObj['timestamp'] = comment.timestamp
-    commentObj['likeCount'] = comment.likeCount
+    commentObj.timestamp = comment.timestamp
+    commentObj.likeCount = comment.likeCount
     return commentObj
   },
-  getFirstCommentChild(url, callback) {
-    request(url, (error, res, body) => {
-      if (!error && res.statusCode == 200) {
-        // Get the first child of the comment so we can use the firstCommentId to extract other children comment
-        const payload = JSON.parse(body).payload
-        if (!payload || !(payload.comments[0])) {
-          callback(undefined)
-          return
-        }
-        const opUserId = payload.opUserId
-        const firstChild = payload.comments[0].children[0]
-        callback(_util.processComment(firstChild, opUserId))
-      } else {
-        callback(undefined)
-      }
-    })
+  async getFirstCommentChild(url) {
+    const body = await this.getBodyFromUrl(url);
+    // Get the first child of the comment so we can use the firstCommentId to extract other children comment
+    const payload = JSON.parse(body).payload
+    if (!payload || !(payload.comments[0])) {
+      return undefined;
+    }
+    const opUserId = payload.opUserId;
+    const firstChild = payload.comments[0].children[0];
+    return _util.processComment(firstChild, opUserId);
   },
   generateHash(string) {
-    const hash = sha1(string)
-    hashMap[hash] = string
-    return sha1(string)
+    const hash = sha1(string);
+    hashMap[hash] = string;
+    return sha1(string);
   },
   getValueInHashmap(hash) {
     if (hash in hashMap) {
-      return hashMap[hash]
+      return hashMap[hash];
     } else {
-      return ''
+      return '';
     }
   },
   getBodyFromUrl(url) {
@@ -265,8 +243,8 @@ var _util = {
         resolve(body);
       });
     });
-  }
-}
+  },
+};
 
 ///////////////////////////
 // API ROUTE STARTS HERE //
@@ -277,24 +255,11 @@ var _util = {
  *
  * @param gagId - the id of the gag
  */
-app.get('/gag/:gagId', cache.route({ expire: 60*60*24  }), (req, res) => {
-  // Gag id is invalid if the length is not 7
-  if (req.params.gagId.length != 7) {
-    res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-    return
-  }
-
-  const url = `http://9gag.com/gag/${req.params.gagId}`
-  _9gag.getPost(url, req.params.gagId, response => {
-    // Handle unknown gag
-    if (!response) {
-      res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-      return
-    }
-    // returning a json response
-    res.json(response)
-  })
-})
+app.get('/gag/:gagId', cache.route({ expire: 300 }), async (req, res) => {
+  const url = `http://9gag.com/gag/${req.params.gagId}`;
+  const response = await _9gag.getPost(url, req.params.gagId);
+  res.json(response);
+});
 
 /**
  * Get 10 gags from a particular section and sub-section
@@ -303,29 +268,23 @@ app.get('/gag/:gagId', cache.route({ expire: 60*60*24  }), (req, res) => {
  * @query subSection - the sub-section of the gag
  * @query loadMoreId - an id that allows user to load the next 10 gags from a particular section and sub-section
  */
-app.get('/:section/', cache.route({ expire: 60*60*24  }), (req, res) => {
+app.get('/:section/', cache.route({ expire: 300 }), async (req, res) => {
   // Check if the URL is valid
   if (_util.isSectionValid(req)) {
-    const url = `http://9gag.com/${req.params.section}/${!req.query.subSection ? '' : req.query.subSection}`
+    const url = `http://9gag.com/${req.params.section}/${!req.query.subSection ? '' : req.query.subSection}`;
 
-    _9gag.getPosts(url, req.query.loadMoreId, response => {
-      if (!response) {
-        res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-        return
-      }
+    const response = await _9gag.getPosts(url, req.query.loadMoreId);
 
-      // Add section and subSection key to response
-      response['section'] = req.params.section
-      if (!_.includes(SPECIAL_SECTION_LIST, req.params.section)) {
-        response['subSection'] = !req.query.subSection ? 'hot' : req.query.subSection
-      }
-
-      res.json(response)
-    })
+    // Add section and subSection key to response
+    response.section = req.params.section;
+    if (!_.includes(SPECIAL_SECTION_LIST, req.params.section)) {
+      response.subSection = !req.query.subSection ? 'hot' : req.query.subSection;
+    }
+    res.json(response);
   } else {
-    res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
+    res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE});
   }
-})
+});
 
 /**
  * Get the overview of a user
@@ -333,10 +292,10 @@ app.get('/:section/', cache.route({ expire: 60*60*24  }), (req, res) => {
  * @param userId - the userId of the user
  */
 app.get('/user/:userId', async (req, res) => {
-  const url = `http://9gag.com/u/${req.params.userId}`
-  let response = await _9gag.getUserOverview(url, req.params.userId)
-  res.json(response)
-})
+  const url = `http://9gag.com/u/${req.params.userId}`;
+  const response = await _9gag.getPosts(url, req.query.loadMoreId);
+  res.json(response);
+});
 
 /**
  * Get the posts of a user
@@ -344,17 +303,11 @@ app.get('/user/:userId', async (req, res) => {
  * @param userId - the userId of the user
  * @query loadMoreId - an id that allows user to load the next 10 posts that the user posted
  */
-app.get('/user/:userId/posts', cache.route({ expire: 60*60*24  }), (req, res) => {
-  const url = `http://9gag.com/u/${req.params.userId}/posts`
-  _9gag.getPosts(url, req.query.loadMoreId, response => {
-    if (!response) {
-      res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-      return
-    }
-    response['userId'] = req.params.userId
-    res.json(response)
-  })
-})
+app.get('/user/:userId/posts', cache.route({ expire: 300 }), async (req, res) => {
+  const url = `http://9gag.com/u/${req.params.userId}/posts`;
+  const response = await _9gag.getPosts(url, req.query.loadMoreId);
+  res.json(response);
+});
 
 /**
  * Get the posts that the user upvoted
@@ -362,17 +315,11 @@ app.get('/user/:userId/posts', cache.route({ expire: 60*60*24  }), (req, res) =>
  * @param userId - the userId of the user
  * @query loadMoreId - an id that allows user to load the next 10 gags that the user upvoted
  */
-app.get('/user/:userId/upvotes', cache.route({ expire: 60*60*24  }), (req, res) => {
-  const url = `http://9gag.com/u/${req.params.userId}/likes`
-  _9gag.getPosts(url, req.query.loadMoreId, response => {
-    if (!response) {
-      res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-      return
-    }
-    response['userId'] = req.params.userId
-    res.json(response)
-  })
-})
+app.get('/user/:userId/upvotes', cache.route({ expire: 300 }), async (req, res) => {
+  const url = `http://9gag.com/u/${req.params.userId}/likes`;
+  const response = await _9gag.getPosts(url, req.query.loadMoreId);
+  res.json(response);
+});
 
 /**
  * Get the comments of a gag
@@ -381,32 +328,19 @@ app.get('/user/:userId/upvotes', cache.route({ expire: 60*60*24  }), (req, res) 
  * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
  * @query section - the section of the comments (can be hot or fresh)
  */
-app.get('/comment/:gagId', cache.route({ expire: 60*60*24  }), (req, res) => {
+app.get('/comment/:gagId', cache.route({ expire: 300 }), async (req, res) => {
   const appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b'
   const gagUrl = encodeURIComponent(`http://9gag.com/gag/${req.params.gagId}`)
-  // Comments are sorted by its score by default
-  let section = 'score'
-  if (req.query.section) {
-    if (req.query.section == 'fresh') {
-      section='ts'
-    }
-  }
 
   //Append loadMoreId
-  let url = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=10&level=2&order=${section}`
+  let url = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=10&level=2&order=score`
   if (req.query.loadMoreId) {
-    url += `&ref=${_util.getValueInHashmap(req.query.loadMoreId)}`
+    url += `&ref=${_util.getValueInHashmap(req.query.loadMoreId)}`;
   }
 
-  // A URL that retrieve the comments of a gag post in JSON format
-  _9gag.getComments(url, response => {
-    if (!response) {
-      res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-      return
-    }
-    res.json(response)
-  })
-})
+  const response = await _9gag.getComments(url);
+  res.json(response);
+});
 
 /**
  * Get the comments of a gag
@@ -415,60 +349,45 @@ app.get('/comment/:gagId', cache.route({ expire: 60*60*24  }), (req, res) => {
  * @param commentId - the id of the comment
  * @query loadMoreId - an id that allows user to load the next 10 comments of the gag
  */
-app.get('/comment/:gagId/:commentId', cache.route({ expire: 60*60*24  }), (req, res) => {
-  const appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b'
-  const gagUrl = encodeURIComponent(`http://9gag.com/gag/${req.params.gagId}`)
+app.get('/comment/:gagId/:commentId', cache.route({ expire: 300 }), async (req, res) => {
+  const appId = 'a_dd8f2b7d304a10edaf6f29517ea0ca4100a43d1b';
+  const gagUrl = encodeURIComponent(`http://9gag.com/gag/${req.params.gagId}`);
 
   // If there is no loadMoreId, we need to find the id of the first child of the comment
   // We need to use that id to find the rest of the comment children
   // Otherwise, use the loadMoreId to load more comments
   if (!req.query.loadMoreId) {
-    const url = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=0&level=2&commentId=${req.params.commentId}`
-    _util.getFirstCommentChild(url, firstChildCommentObj => {
-      if (!firstChildCommentObj) {
-        res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-        return
-      }
-      // Get the rest of the comment children using the firstChildCommentId
-      const commentUrl = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=10&level=1&refCommentId=${firstChildCommentObj.commentId}`
-      _9gag.getComments(commentUrl, response => {
-        if (!response) {
-          res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-          return
-        }
-        // concatenate firstChildComment with the rest of the child comments
-        response['comments'] = _.concat(firstChildCommentObj, response['comments'])
-        response['parent'] = req.params.commentId
-        res.json(response)
-      })
-    })
+    const url = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=0&level=2&commentId=${req.params.commentId}`;
+    const firstChildCommentObj = await _util.getFirstCommentChild(url);
+    // Get the rest of the comment children using the firstChildCommentId
+    const commentUrl = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=10&level=1&refCommentId=${firstChildCommentObj.commentId}`;
+    const response = await _9gag.getComments(commentUrl);
+    // concatenate firstChildComment with the rest of the child comments
+    response.comments = _.concat(firstChildCommentObj, response.comments);
+    response.parent = req.params.commentId;
+    res.json(response);
   } else {
-    const commentUrl = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=10&level=1&refCommentId=${_util.getValueInHashmap(req.query.loadMoreId)}`
-    _9gag.getComments(commentUrl, response => {
-      if (!response) {
-        res.json({'status': NOT_FOUND, 'message': NOT_FOUND_MESSAGE})
-        return
-      }
-      response['parent'] = req.params.commentId
-      res.json(response)
-    })
+    const commentUrl = `http://comment-cdn.9gag.com/v1/cacheable/comment-list.json?appId=${appId}&url=${gagUrl}&count=10&level=1&refCommentId=${_util.getValueInHashmap(req.query.loadMoreId)}`;
+    const response = await _9gag.getComments(commentUrl);
+    response.parent = req.params.commentId;
+    res.json(response);
   }
-})
+});
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'))
-})
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 /**
  * Unknown requests will be routed to here
  */
 app.get('*', (req, res) => {
-  res.json({'status': BAD_REQUEST, 'message': "BAD_REQUEST_MESSAGE"})
-})
+  res.json({'status': BAD_REQUEST, 'message': "BAD_REQUEST_MESSAGE"});
+});
 
 app.listen(app.get('port'), () => {
-  console.log('9gag API server started on port',  app.get('port'))
-})
+  console.log('9gag API server started on port',  app.get('port'));
+});
 
 // Export app for testing purposes
-export default app
+export default app;
