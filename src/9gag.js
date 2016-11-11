@@ -390,4 +390,4 @@ app.listen(app.get('port'), () => {
 });
 
 // Export app for testing purposes
-export default app;
+module.exports = app;

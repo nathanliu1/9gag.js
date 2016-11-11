@@ -6,7 +6,8 @@
   "scripts": {
     "start": "./node_modules/.bin/babel-node src/9gag.js --presets es2015",
     "dev": "nodemon src/9gag.js --exec \"npm start\"",
-    "test": "mocha test/test.js"
+    "test": "\"npm run babel\" && mocha test/test.js",
+    "babel": "./node_modules/.bin/babel src/9gag.js -d dist"
   },
   "repository": {
     "type": "git",
@@ -24,8 +25,10 @@
   "dependencies": {
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.2",
+    "babel-plugin-transform-runtime": "^6.15.0",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-stage-0": "^6.16.0",
+    "babel-runtime": "^6.18.0",
     "chai": "^3.5.0",
     "chai-http": "^3.0.0",
     "cheerio": "^0.22.0",
