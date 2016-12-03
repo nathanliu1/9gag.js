@@ -4,7 +4,7 @@
   "description": "9GAG API",
   "main": "src/9gag.js",
   "scripts": {
-    "start": "BABEL_DISABLE_CACHE=1 ./node_modules/.bin/babel-node src/9gag.js --presets es2015",
+    "start": "./node_modules/.bin/babel-node src/9gag.js --presets es2015",
     "dev": "nodemon src/9gag.js --exec \"npm start\"",
     "test": "\"npm run babel\" && mocha test/test.js",
     "babel": "./node_modules/.bin/babel src/9gag.js -d dist"
