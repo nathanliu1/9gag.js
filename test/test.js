@@ -1,6 +1,6 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-var server = require('../src/9gag');
+var server = require('../dist/src/9gag');
 var should = chai.should();
 var assert = chai.assert;
 
@@ -19,7 +19,6 @@ describe('9GAG API SERVER TESTS', function() {
                 assert.property(gag.images, 'cover');
                 assert.property(gag.images, 'normal');
                 assert.property(gag.images, 'large');
-                assert.equal(gag.next, 'aopbP5x');
                 assert.equal(gag.url, 'http://9gag.com/gag/aXw5g2v');
                 assert.typeOf(gag.votes, 'number');
                 assert.typeOf(gag.comments, 'number');

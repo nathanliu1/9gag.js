@@ -2,10 +2,16 @@
 9gag.js is an Node.js-based API for 9gag.com. Available in both API server and npm module, it enables third-party applications to access various data from 9gag. Unofficially.
 
 ##Documentation
-Method | Endpoint
--------|---------
-GET    | [/gag/:gagId](#get-gaggagid)
-GET    | [/:section?subSection=:subSection&loadMoreId=:loadMoreId](#get-sectionsubsectionsubsectionloadmoreidloadmoreid)
+Method | Endpoint | USAGE
+-------|--------- | ---------
+GET    | [/gag/:gagId](#get-gaggagid) | Get data for a specific gag
+GET    | [/:section?subSection=:subSection&loadMoreId=:loadMoreId](#get-sectionsubsectionsubsectionloadmoreidloadmoreid) | Get 10 gags from a particular section and sub-section
+GET    | [/user/:userId](#get-useruserid) | Get the overview of a user
+GET    | [/user/:userId/posts?loadMoreId=:loadMoreId](#get-useruseridpostsloadmoreidloadmoreid) | Get the gags posted by the gag
+GET    | [/user/:userId/upvotes?loadMoreId=:loadMoreId](#get-useruseridupvotesloadmoreidloadmoreid) | Get the gags upvoted by the user
+GET    | [/comment/:gagId?loadMoreId=:loadMoreId](#get-commentgagidloadmoreidloadmoreid) | Get comments of a post
+GET    | [/comment/:gagId/:commentId?loadMoreId=:loadMoreId](#get-commentgagidcommentidloadmoreidloadmoreid) | Get children of the comment
+
 
 Object Model          |
 --------------------- |
@@ -13,6 +19,7 @@ Object Model          |
 [Images](#images)     |
 [Media](#media)       | 
 [Share](#share)       |
+[Comment](#comment)       |
 
 ### GET /gag/:gagId
 Get data for a specific gag.
@@ -149,7 +156,7 @@ Response
 ```
 
 ### GET /user/:userId/posts?loadMoreId=:loadMoreId
-Get the gags posted by the gag
+Get the gags posted by the user
 
 ####Parameters
 Key      | Required? |Value Type      | Default | Description
@@ -194,6 +201,7 @@ Response
 ```
 
 ### GET /user/:userId/upvotes?loadMoreId=:loadMoreId
+Get the gags upvoted by the user
 
 ####Parameters
 Key      | Required? |Value Type      | Default | Description
@@ -238,6 +246,8 @@ Response
 ```
 
 ### GET /comment/:gagId?loadMoreId=:loadMoreId
+
+Get comments of a post
 
 ####Parameters
 Key      | Required? |Value Type      | Default | Description
@@ -359,7 +369,7 @@ Response
     {
       "commentId": "c_147667297282053391",
       "userId": "randomredpanda",
-      "text": What are you doing with your life?",
+      "text": "What are you doing with your life?",
       "isOp": false,
       "isChild": false,
       "childrenCount": 0,
@@ -371,6 +381,131 @@ Response
 ```
 
 ### GET /comment/:gagId/:commentId?loadMoreId=:loadMoreId
+Get children of the comment
+
+####Parameters
+Key      | Required? |Value Type      | Default | Description
+--------- | ------ |--------- | ------- | -----------
+gagId    |✓ | String    | N/A     | ID of the gag
+commentId    |✓ | String    | N/A     | ID of the gag
+loadMoreId       | | String     | N/A | The id that the user need to navigate to the next 10 gags
+
+####Response
+Key      | Value Type      |  Description | Note
+--------- | --------- | ------- | -----------
+status     | Number    | HTTP status code
+message     | String    |  Message of the status code
+loadMoreId     | String | An array of gag id that the user upvotes
+comments | Array | An array of [Comment](#comment) object
+parent | String | The ID of the parent
+
+####Example
+REST Call
+```
+localhost:3000/comment/a6QW77b/c_147661498453336211
+```
+
+Response
+```json
+{
+  "status": 200,
+  "message": "OK",
+  "comments": [
+    {
+      "commentId": "c_147667307765857704",
+      "userId": "furiousdeer",
+      "text": "@mceldafis certainly not American",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476673077,
+      "likeCount": 96
+    },
+    {
+      "commentId": "c_147667371119417716",
+      "userId": "hebbby",
+      "text": "@mceldafis exactly what i was thinking, i want whatever this beer is OP",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476673711,
+      "likeCount": 11
+    },
+    {
+      "commentId": "c_147667410697736520",
+      "userId": "jjj04",
+      "text": "@bill_h Are we talking adults here? A 30 pound teenager maybe.",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476674106,
+      "likeCount": 16
+    },
+    {
+      "commentId": "c_147667464474315983",
+      "userId": "sanirockz",
+      "text": "@mceldafis Asking the right questions here",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476674644,
+      "likeCount": 0
+    },
+    {
+      "commentId": "c_147667495622697663",
+      "userId": "barneyonmeth",
+      "text": "@jjj04 a 30 pound teenager would be a dead teenager",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476674956,
+      "likeCount": 13
+    },
+    {
+      "commentId": "c_147667670659204091",
+      "userId": "coolnomore",
+      "text": "@jjj04 People have different alcohol tolerance. I&#039;ve seen many adults get quite drunk after 3 beer. It&#039;s not that surprising. Its just your ego, mr.badass.",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476676706,
+      "likeCount": 3
+    },
+    {
+      "commentId": "c_147667712641169495",
+      "userId": "xThatSwissGuyx",
+      "text": "@mceldafis this new vodka beer u know",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476677126,
+      "likeCount": 3
+    },
+    {
+      "commentId": "c_147667719227015293",
+      "userId": "jjj04",
+      "text": "@coolnomore First time I&#039;ve been called a badass for being able to drink 3 beers lol",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476677192,
+      "likeCount": 7
+    },
+    {
+      "commentId": "c_147667802001922247",
+      "userId": "cthedogg",
+      "text": "@jjj04 dude my ex was 90lbs and not even one beer and she was already buzzed. I&#039;m 210 and at least 5 beers to start to feel something.",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476678020,
+      "likeCount": 0
+    },
+    {
+      "commentId": "c_147668150772941017",
+      "userId": "master_raccoon",
+      "text": "@mceldafis plot twist. 5 barrels of beer",
+      "isOp": false,
+      "isChild": true,
+      "timestamp": 1476681507,
+      "likeCount": 2
+    }
+  ],
+  "loadMoreId": "d67a4f14d99086b756fd46428e0ed361dcca788d",
+  "parent": "c_147661498453336211"
+}
+```
 
 ###Gag
 A gag object contains information about the gag.
