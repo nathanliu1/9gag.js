@@ -1,6 +1,6 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-var server = require('../src/9gag');
+var server = require('../dist/src/9gag');
 var should = chai.should();
 var assert = chai.assert;
 
